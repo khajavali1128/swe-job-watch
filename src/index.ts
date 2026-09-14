@@ -9,6 +9,8 @@ import { filterJobSummaries } from "./filters/job-summary-filter.js";
 import { sendRunSummaryEmail } from "./email/run-summary.js";
 import {
   GoogleSheetsJobStore,
+  processedJobKey,
+  type ProcessedJob,
   type QualifiedJob,
 } from "./sheets/google-sheets.js";
 
@@ -16,6 +18,7 @@ interface RunTotals {
   companies: number;
   summaries: number;
   cheapFilterMatches: number;
+  previouslyProcessed: number;
   qualified: number;
   rejected: number;
   failed: number;
@@ -34,16 +37,21 @@ async function main(): Promise<void> {
   const dryRun = process.env.DRY_RUN === "true";
   const companies = config.companies.filter((company) => company.enabled);
   const qualifiedJobs: QualifiedJob[] = [];
+  const processedJobs: ProcessedJob[] = [];
+  const processedJobKeys = await sheetStore.loadProcessedJobKeys(!dryRun);
   const totals: RunTotals = {
     companies: companies.length,
     summaries: 0,
     cheapFilterMatches: 0,
+    previouslyProcessed: 0,
     qualified: 0,
     rejected: 0,
     failed: 0,
   };
 
-  console.log(`Processing ${companies.length} enabled companies...`);
+  console.log(
+    `Processing ${companies.length} enabled companies (${processedJobKeys.size} jobs already processed)...`,
+  );
 
   for (const company of companies) {
     console.log(`\n[${company.name}] Fetching open jobs...`);
@@ -52,20 +60,36 @@ async function main(): Promise<void> {
       const adapter = createAdapter(company);
       const summaries = await adapter.fetchJobSummaries(company);
       const candidates = filterJobSummaries(summaries, config.filters);
+      const newCandidates = candidates.filter((candidate) => {
+        const key = processedJobKey(candidate);
+
+        if (processedJobKeys.has(key)) {
+          return false;
+        }
+
+        processedJobKeys.add(key);
+        return true;
+      });
       totals.summaries += summaries.length;
       totals.cheapFilterMatches += candidates.length;
+      totals.previouslyProcessed += candidates.length - newCandidates.length;
 
       console.log(
-        `[${company.name}] ${candidates.length}/${summaries.length} jobs passed cheap filters`,
+        `[${company.name}] ${candidates.length}/${summaries.length} jobs passed cheap filters; ${newCandidates.length} are new`,
       );
 
-      for (const candidate of candidates) {
+      for (const candidate of newCandidates) {
         try {
           const details = await adapter.fetchJobDetails(company, candidate);
           const validation = await validateJob(
             details,
             config.filters,
           );
+          processedJobs.push({
+            job: details,
+            validation,
+            processedAt: new Date(),
+          });
 
           if (validation.decision === "QUALIFIED") {
             qualifiedJobs.push({ job: details, validation });
@@ -90,6 +114,7 @@ async function main(): Promise<void> {
 
   let appended = 0;
   let duplicates = 0;
+  let processedRecorded = 0;
 
   if (dryRun) {
     console.log(
@@ -102,6 +127,11 @@ async function main(): Promise<void> {
     console.log(
       `\nGoogle Sheets: appended ${result.appended}, skipped ${result.duplicates} duplicates`,
     );
+    const processedResult = await sheetStore.appendProcessedJobs(processedJobs);
+    processedRecorded = processedResult.appended;
+    console.log(
+      `Processed Jobs: recorded ${processedResult.appended}, skipped ${processedResult.duplicates} duplicates`,
+    );
   }
 
   console.log("\nRun summary:");
@@ -112,6 +142,7 @@ async function main(): Promise<void> {
       ...totals,
       appended,
       duplicates,
+      processedRecorded,
     });
 
     if (emailSent) {

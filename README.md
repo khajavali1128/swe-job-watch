@@ -2,7 +2,7 @@
 
 SWE Job Watch is a scheduled Node.js and TypeScript service that scans public ATS job boards, filters recently opened U.S. software-engineering roles, validates full job descriptions with AI, and appends qualified jobs to Google Sheets.
 
-The production service currently checks 55 enabled companies across Ashby, Greenhouse, and SmartRecruiters. Lever is implemented, but its companies are disabled because Lever's public postings API does not provide a reliable publication timestamp.
+The production service currently checks 69 enabled companies across Ashby, Greenhouse, and SmartRecruiters. Lever is implemented, but its companies are disabled because Lever's public postings API does not provide a reliable publication timestamp.
 
 ## Workflow
 
@@ -21,6 +21,9 @@ Cheap deterministic filters
   seniority, and employment type
             |
             v
+Skip keys already stored in the Processed Jobs ledger
+            |
+            v
 Fetch full descriptions only for survivors
             |
             v
@@ -33,8 +36,10 @@ Gemini fallback (gemini-3.5-flash-lite)
             v
 Zod validation + logical consistency checks
             |
+            +----> all successful decisions -> Processed Jobs
+            |
             v
-Qualified and non-duplicate jobs -> Google Sheets
+Qualified and non-duplicate jobs -> main jobs tab
             |
             v
 Gmail run-summary notification
@@ -86,6 +91,8 @@ S.No | Company | Job URL | Title
 `S.No` continues from the highest existing numeric value.
 
 Each run groups new rows beneath the next Pacific calendar day's heading. For example, a run on September 13 uses `SEPT 14 2026`. The service reuses that heading when it already exists; otherwise, it appends the heading once before the new jobs.
+
+The service also maintains a hidden `Processed Jobs` tab. It creates the tab automatically, reads its stable `source:companyId:jobId` keys once at startup, and skips known jobs before fetching descriptions or calling AI. Both qualified and rejected decisions are recorded in a batch after the main-sheet write succeeds. Jobs that fail description fetching or AI validation are not recorded, so a later run can retry them.
 
 ## Local Setup
 
@@ -205,7 +212,7 @@ src/ai/job-validator.ts            OpenAI primary and Gemini fallback
 src/config/                        YAML loading and Zod validation
 src/email/run-summary.ts           Gmail run summary
 src/filters/job-summary-filter.ts  Cheap deterministic filtering
-src/sheets/google-sheets.ts        Deduplication and Sheet append
+src/sheets/google-sheets.ts        Main-sheet output and processed-job ledger
 src/index.ts                       Production orchestration
 src/types.ts                       Normalized job domain types
 tests/                             Unit tests

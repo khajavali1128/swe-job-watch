@@ -1,14 +1,23 @@
 import { google, type sheets_v4 } from "googleapis";
 
 import type { JobValidationResult } from "../ai/job-validator.js";
-import type { JobDetails } from "../types.js";
+import type { JobDetails, JobSummary } from "../types.js";
 
 export interface QualifiedJob {
   job: JobDetails;
   validation: JobValidationResult;
 }
 
+export interface ProcessedJob extends QualifiedJob {
+  processedAt: Date;
+}
+
 export interface AppendQualifiedJobsResult {
+  appended: number;
+  duplicates: number;
+}
+
+export interface AppendProcessedJobsResult {
   appended: number;
   duplicates: number;
 }
@@ -27,10 +36,21 @@ const HEADERS = [
   "Job URL",
   "Title",
 ];
+const PROCESSED_JOBS_TAB = "Processed Jobs";
+const PROCESSED_JOBS_HEADERS = [
+  "Job Key",
+  "Company",
+  "Job ID",
+  "Job URL",
+  "Decision",
+  "Processed At",
+  "Updated At",
+];
 
 export class GoogleSheetsJobStore {
   private readonly sheets: sheets_v4.Sheets;
   private sheetTab: string | undefined;
+  private processedJobsTab: string | undefined;
 
   constructor(private readonly config = loadGoogleSheetsConfig()) {
     const auth = config.serviceAccountKeyFile
@@ -109,6 +129,81 @@ export class GoogleSheetsJobStore {
     };
   }
 
+  async loadProcessedJobKeys(createIfMissing = true): Promise<Set<string>> {
+    const sheetTab = await this.resolveProcessedJobsTab(createIfMissing);
+
+    if (!sheetTab) {
+      return new Set();
+    }
+
+    await this.ensureProcessedJobsHeaders();
+    const response = await this.sheets.spreadsheets.values.get({
+      spreadsheetId: this.config.spreadsheetId,
+      range: `${sheetName(sheetTab)}!A2:A`,
+    });
+
+    return new Set(
+      (response.data.values ?? [])
+        .map((row) => row[0])
+        .filter((value): value is string =>
+          typeof value === "string" && value.trim().length > 0
+        ),
+    );
+  }
+
+  async appendProcessedJobs(
+    records: ProcessedJob[],
+  ): Promise<AppendProcessedJobsResult> {
+    if (records.length === 0) {
+      return { appended: 0, duplicates: 0 };
+    }
+
+    const sheetTab = await this.resolveProcessedJobsTab();
+
+    if (!sheetTab) {
+      throw new Error("Processed Jobs tab could not be created");
+    }
+
+    const existingKeys = await this.loadProcessedJobKeys();
+    const newRecords = records.filter(({ job }) => {
+      const key = processedJobKey(job);
+
+      if (existingKeys.has(key)) {
+        return false;
+      }
+
+      existingKeys.add(key);
+      return true;
+    });
+
+    if (newRecords.length === 0) {
+      return { appended: 0, duplicates: records.length };
+    }
+
+    await this.sheets.spreadsheets.values.append({
+      spreadsheetId: this.config.spreadsheetId,
+      range: `${sheetName(sheetTab)}!A:G`,
+      valueInputOption: "RAW",
+      insertDataOption: "INSERT_ROWS",
+      requestBody: {
+        values: newRecords.map(({ job, validation, processedAt }) => [
+          processedJobKey(job),
+          job.companyName,
+          job.jobId,
+          job.url,
+          validation.decision,
+          processedAt.toISOString(),
+          job.updatedAt?.toISOString() ?? "",
+        ]),
+      },
+    });
+
+    return {
+      appended: newRecords.length,
+      duplicates: records.length - newRecords.length,
+    };
+  }
+
   private async ensureHeaders(): Promise<void> {
     const range = `${sheetName(await this.resolveSheetTab())}!A1:D1`;
     const response = await this.sheets.spreadsheets.values.get({
@@ -125,6 +220,31 @@ export class GoogleSheetsJobStore {
       range,
       valueInputOption: "RAW",
       requestBody: { values: [HEADERS] },
+    });
+  }
+
+  private async ensureProcessedJobsHeaders(): Promise<void> {
+    const sheetTab = await this.resolveProcessedJobsTab();
+
+    if (!sheetTab) {
+      throw new Error("Processed Jobs tab could not be created");
+    }
+
+    const range = `${sheetName(sheetTab)}!A1:G1`;
+    const response = await this.sheets.spreadsheets.values.get({
+      spreadsheetId: this.config.spreadsheetId,
+      range,
+    });
+
+    if ((response.data.values?.[0]?.length ?? 0) > 0) {
+      return;
+    }
+
+    await this.sheets.spreadsheets.values.update({
+      spreadsheetId: this.config.spreadsheetId,
+      range,
+      valueInputOption: "RAW",
+      requestBody: { values: [PROCESSED_JOBS_HEADERS] },
     });
   }
 
@@ -188,6 +308,47 @@ export class GoogleSheetsJobStore {
     this.sheetTab = title;
     return title;
   }
+
+  private async resolveProcessedJobsTab(
+    createIfMissing = true,
+  ): Promise<string | undefined> {
+    if (this.processedJobsTab) {
+      return this.processedJobsTab;
+    }
+
+    const response = await this.sheets.spreadsheets.get({
+      spreadsheetId: this.config.spreadsheetId,
+      fields: "sheets.properties(sheetId,title)",
+    });
+    const existingTab = response.data.sheets?.find(
+      ({ properties }) => properties?.title === PROCESSED_JOBS_TAB,
+    );
+
+    if (!existingTab && !createIfMissing) {
+      return undefined;
+    }
+
+    if (!existingTab) {
+      await this.sheets.spreadsheets.batchUpdate({
+        spreadsheetId: this.config.spreadsheetId,
+        requestBody: {
+          requests: [
+            {
+              addSheet: {
+                properties: {
+                  title: PROCESSED_JOBS_TAB,
+                  hidden: true,
+                },
+              },
+            },
+          ],
+        },
+      });
+    }
+
+    this.processedJobsTab = PROCESSED_JOBS_TAB;
+    return this.processedJobsTab;
+  }
 }
 
 function loadGoogleSheetsConfig(): GoogleSheetsConfig {
@@ -236,6 +397,12 @@ function sheetName(value: string): string {
 
 function jobKey(job: JobDetails): string {
   return job.url;
+}
+
+export function processedJobKey(
+  job: Pick<JobSummary, "source" | "companyId" | "jobId">,
+): string {
+  return `${job.source}:${job.companyId}:${job.jobId}`;
 }
 
 const PACIFIC_TIME_ZONE = "America/Los_Angeles";

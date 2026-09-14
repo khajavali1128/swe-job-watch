@@ -4,10 +4,12 @@ export interface RunSummary {
   companies: number;
   summaries: number;
   cheapFilterMatches: number;
+  previouslyProcessed: number;
   qualified: number;
   rejected: number;
   appended: number;
   duplicates: number;
+  processedRecorded: number;
   failed: number;
 }
 
@@ -33,10 +35,12 @@ export async function sendRunSummaryEmail(
     `Companies checked: ${summary.companies}`,
     `Jobs scanned: ${summary.summaries}`,
     `Passed cheap filters: ${summary.cheapFilterMatches}`,
+    `Previously processed: ${summary.previouslyProcessed}`,
     `Qualified: ${summary.qualified}`,
     `Rejected: ${summary.rejected}`,
     `Added to sheet: ${summary.appended}`,
     `Duplicates skipped: ${summary.duplicates}`,
+    `Processed decisions recorded: ${summary.processedRecorded}`,
     `Failures: ${summary.failed}`,
   ];
 

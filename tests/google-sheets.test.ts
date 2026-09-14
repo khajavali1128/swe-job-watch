@@ -1,9 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { QualifiedJob } from "../src/sheets/google-sheets.js";
+import type {
+  ProcessedJob,
+  QualifiedJob,
+} from "../src/sheets/google-sheets.js";
 
-const { spreadsheetsGet, valuesAppend, valuesGet, valuesUpdate } = vi.hoisted(
+const {
+  spreadsheetsBatchUpdate,
+  spreadsheetsGet,
+  valuesAppend,
+  valuesGet,
+  valuesUpdate,
+} = vi.hoisted(
   () => ({
+    spreadsheetsBatchUpdate: vi.fn(),
     spreadsheetsGet: vi.fn(),
     valuesAppend: vi.fn(),
     valuesGet: vi.fn(),
@@ -19,6 +29,7 @@ vi.mock("googleapis", () => ({
     },
     sheets: () => ({
       spreadsheets: {
+        batchUpdate: spreadsheetsBatchUpdate,
         get: spreadsheetsGet,
         values: {
           append: valuesAppend,
@@ -30,7 +41,10 @@ vi.mock("googleapis", () => ({
   },
 }));
 
-import { GoogleSheetsJobStore } from "../src/sheets/google-sheets.js";
+import {
+  GoogleSheetsJobStore,
+  processedJobKey,
+} from "../src/sheets/google-sheets.js";
 
 const qualifiedJob: QualifiedJob = {
   job: {
@@ -58,6 +72,10 @@ const qualifiedJob: QualifiedJob = {
     reasons: ["Qualified."],
   },
 };
+const processedJob: ProcessedJob = {
+  ...qualifiedJob,
+  processedAt: new Date("2026-09-14T03:00:00.000Z"),
+};
 
 beforeEach(() => {
   process.env.GOOGLE_SHEET_ID = "sheet-id";
@@ -68,6 +86,7 @@ beforeEach(() => {
       sheets: [{ properties: { sheetId: 0, title: "Jobs" } }],
     },
   });
+  spreadsheetsBatchUpdate.mockReset().mockResolvedValue({ data: {} });
   valuesAppend.mockReset().mockResolvedValue({ data: {} });
   valuesGet.mockReset();
   valuesUpdate.mockReset().mockResolvedValue({ data: {} });
@@ -164,5 +183,121 @@ describe("GoogleSheetsJobStore", () => {
 
     expect(result).toEqual({ appended: 0, duplicates: 1 });
     expect(valuesAppend).not.toHaveBeenCalled();
+  });
+
+  it("loads stable keys from an existing processed jobs tab", async () => {
+    spreadsheetsGet.mockResolvedValue({
+      data: {
+        sheets: [
+          { properties: { sheetId: 0, title: "Jobs" } },
+          { properties: { sheetId: 1, title: "Processed Jobs" } },
+        ],
+      },
+    });
+    valuesGet
+      .mockResolvedValueOnce({ data: { values: [["Job Key"]] } })
+      .mockResolvedValueOnce({
+        data: {
+          values: [
+            ["greenhouse:example:job-1"],
+            ["greenhouse:example:job-2"],
+          ],
+        },
+      });
+
+    const keys = await new GoogleSheetsJobStore().loadProcessedJobKeys();
+
+    expect(keys).toEqual(
+      new Set([
+        "greenhouse:example:job-1",
+        "greenhouse:example:job-2",
+      ]),
+    );
+    expect(spreadsheetsBatchUpdate).not.toHaveBeenCalled();
+  });
+
+  it("creates the processed jobs tab as hidden when it is missing", async () => {
+    valuesGet
+      .mockResolvedValueOnce({ data: { values: [] } })
+      .mockResolvedValueOnce({ data: { values: [] } });
+
+    await new GoogleSheetsJobStore().loadProcessedJobKeys();
+
+    expect(spreadsheetsBatchUpdate).toHaveBeenCalledWith({
+      spreadsheetId: "sheet-id",
+      requestBody: {
+        requests: [
+          {
+            addSheet: {
+              properties: {
+                title: "Processed Jobs",
+                hidden: true,
+              },
+            },
+          },
+        ],
+      },
+    });
+    expect(valuesUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        range: "'Processed Jobs'!A1:G1",
+      }),
+    );
+  });
+
+  it("does not create a missing processed jobs tab for a dry run", async () => {
+    const keys = await new GoogleSheetsJobStore().loadProcessedJobKeys(false);
+
+    expect(keys).toEqual(new Set());
+    expect(spreadsheetsBatchUpdate).not.toHaveBeenCalled();
+    expect(valuesGet).not.toHaveBeenCalled();
+    expect(valuesUpdate).not.toHaveBeenCalled();
+  });
+
+  it("appends only new processed decisions", async () => {
+    spreadsheetsGet.mockResolvedValue({
+      data: {
+        sheets: [
+          { properties: { sheetId: 0, title: "Jobs" } },
+          { properties: { sheetId: 1, title: "Processed Jobs" } },
+        ],
+      },
+    });
+    valuesGet
+      .mockResolvedValueOnce({ data: { values: [["Job Key"]] } })
+      .mockResolvedValueOnce({
+        data: { values: [["greenhouse:example:job-1"]] },
+      });
+
+    const result = await new GoogleSheetsJobStore().appendProcessedJobs([
+      processedJob,
+      processedJob,
+    ]);
+
+    expect(result).toEqual({ appended: 1, duplicates: 1 });
+    expect(valuesAppend).toHaveBeenCalledWith(
+      expect.objectContaining({
+        range: "'Processed Jobs'!A:G",
+        requestBody: {
+          values: [
+            [
+              "greenhouse:example:job-2",
+              "Example",
+              "job-2",
+              "https://example.com/jobs/job-2",
+              "QUALIFIED",
+              "2026-09-14T03:00:00.000Z",
+              "",
+            ],
+          ],
+        },
+      }),
+    );
+  });
+
+  it("builds processed keys from provider, company, and job IDs", () => {
+    expect(processedJobKey(qualifiedJob.job)).toBe(
+      "greenhouse:example:job-2",
+    );
   });
 });
