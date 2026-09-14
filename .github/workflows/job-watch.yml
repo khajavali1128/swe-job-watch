@@ -36,7 +36,7 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: gemini-3.5-flash-lite
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_MODEL: gpt-5-mini
+          OPENAI_MODEL: gpt-5-nano
           GOOGLE_SHEET_ID: 1S6Ph0f5Q6J-YvHuBWG1xsFmnb_Md0eMlxeYT---Bjdg
           GOOGLE_SHEET_GID: "0"
           GOOGLE_SERVICE_ACCOUNT_KEY_FILE: ${{ runner.temp }}/google-service-account.json

@@ -29,7 +29,7 @@ export type JobValidationResult = z.infer<
 >;
 
 const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash-lite";
-const DEFAULT_OPENAI_MODEL = "gpt-5-mini";
+const DEFAULT_OPENAI_MODEL = "gpt-5-nano";
 const responseJsonSchema = z.toJSONSchema(JobValidationResultSchema);
 delete (responseJsonSchema as Record<string, unknown>).$schema;
 (responseJsonSchema as Record<string, unknown>).propertyOrdering = [
