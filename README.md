@@ -63,10 +63,11 @@ All editable qualification rules live in [`config/filters.yaml`](config/filters.
 - Normalizes punctuation and whitespace, so titles such as `Full-Stack Engineer` match configured phrases such as `full stack engineer`.
 - Allows generic developer titles such as `Platform Developer` through the cheap stage for final AI validation.
 - Rejects excluded titles, seniority levels, and employment types during cheap filtering.
-- Uses AI to confirm role relevance, location eligibility, seniority, excluded technical domains, employment type, and mandatory experience.
+- Uses AI to confirm role relevance, location eligibility, seniority, excluded technical domains, employment type, sponsorship eligibility, and mandatory experience.
 - Accepts at most four years of mandatory professional experience.
 - Ignores preferred experience when configured to do so.
 - Accepts jobs without an explicit numeric experience minimum when configured to do so.
+- Rejects jobs whose descriptions explicitly state that visa sponsorship or immigration support is unavailable.
 
 Missing publication dates follow `freshness.allowFirstSeenFallback`. With the current `true` setting, enabling a Lever company would allow all of its otherwise matching listings through the freshness stage, so Lever remains disabled.
 

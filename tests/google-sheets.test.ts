@@ -51,6 +51,7 @@ const qualifiedJob: QualifiedJob = {
     excludedSeniority: false,
     excludedDomain: false,
     excludedEmploymentType: false,
+    sponsorshipEligible: true,
     requiredYears: null,
     experienceStatus: "NOT_SPECIFIED",
     decision: "QUALIFIED",

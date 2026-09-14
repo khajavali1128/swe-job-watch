@@ -80,6 +80,11 @@ export const FiltersConfigSchema = z
         exclude: nonEmptyStringArray,
       })
       .strict(),
+    sponsorship: z
+      .object({
+        rejectNegativeStatements: z.boolean(),
+      })
+      .strict(),
   })
   .strict();
 

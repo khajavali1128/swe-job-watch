@@ -83,3 +83,6 @@ employmentType:
     - co-op
     - apprenticeship
     - student program
+
+sponsorship:
+  rejectNegativeStatements: true

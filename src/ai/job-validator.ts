@@ -13,6 +13,7 @@ export const JobValidationResultSchema = z
     excludedSeniority: z.boolean(),
     excludedDomain: z.boolean(),
     excludedEmploymentType: z.boolean(),
+    sponsorshipEligible: z.boolean(),
     requiredYears: z.number().nonnegative().nullable(),
     experienceStatus: z.enum([
       "WITHIN_LIMIT",
@@ -38,6 +39,7 @@ delete (responseJsonSchema as Record<string, unknown>).$schema;
   "excludedSeniority",
   "excludedDomain",
   "excludedEmploymentType",
+  "sponsorshipEligible",
   "requiredYears",
   "experienceStatus",
   "decision",
@@ -51,6 +53,7 @@ function buildPrompt(job: JobDetails, filters: FiltersConfig): string {
     seniority: filters.seniority,
     experience: filters.experience,
     employmentType: filters.employmentType,
+    sponsorship: filters.sponsorship,
   };
 
   return `You are validating a job opening against configured qualification rules.
@@ -63,8 +66,9 @@ Rules:
 - Experience: use only an explicitly mandatory minimum number of professional experience years. Ignore preferred qualifications when configured to do so. If no mandatory numeric minimum is stated, set requiredYears to null and experienceStatus to NOT_SPECIFIED. Set WITHIN_LIMIT when the mandatory minimum is at or below maxRequiredYears and OVER_LIMIT when it is above it. Apply acceptWhenNotSpecified to the final decision.
 - Excluded domains: reject only when a configured excluded domain is materially part of the role's actual work, not when a term appears incidentally.
 - Employment type: apply the configured included and excluded employment types.
+- Sponsorship: when rejectNegativeStatements is true, set sponsorshipEligible to false if the description explicitly says sponsorship or immigration support is unavailable. This includes wording such as "no sponsorship," "will not/cannot/unable to sponsor," "must be authorized to work without current or future sponsorship," or no support for visa programs such as H-1B, OPT, or CPT. Positive sponsorship language and descriptions that do not mention sponsorship should set sponsorshipEligible to true. Do not interpret a neutral reference to work authorization as a negative restriction unless it excludes sponsorship or immigration support.
 - Location: apply the configured U.S. rules. Accept eligible U.S. locations, U.S.-remote roles, and allowed multi-location roles containing a U.S. location. Reject exclusively non-U.S. roles. Do not invent U.S. eligibility.
-- Decision: return REJECTED if roleMatch is false, usEligible is false, any excluded flag is true, experienceStatus is OVER_LIMIT, or experienceStatus is NOT_SPECIFIED while acceptWhenNotSpecified is false. Return QUALIFIED only when none of those conditions applies.
+- Decision: return REJECTED if roleMatch is false, usEligible is false, any excluded flag is true, sponsorshipEligible is false while rejectNegativeStatements is true, experienceStatus is OVER_LIMIT, or experienceStatus is NOT_SPECIFIED while acceptWhenNotSpecified is false. Return QUALIFIED only when none of those conditions applies.
 - Reasons: provide short, factual reasons for the decision, not an essay.
 
 Qualification configuration:
@@ -82,8 +86,9 @@ Final consistency check after evaluating every field:
 1. If requiredYears is greater than ${filters.experience.maxRequiredYears}, experienceStatus MUST be OVER_LIMIT and decision MUST be REJECTED.
 2. If roleMatch is false or usEligible is false, decision MUST be REJECTED.
 3. If any excluded flag is true, decision MUST be REJECTED.
-4. If experienceStatus is NOT_SPECIFIED and acceptWhenNotSpecified is false, decision MUST be REJECTED.
-5. Only if none of rules 1-4 applies may decision be QUALIFIED.
+4. If sponsorshipEligible is false and rejectNegativeStatements is true, decision MUST be REJECTED.
+5. If experienceStatus is NOT_SPECIFIED and acceptWhenNotSpecified is false, decision MUST be REJECTED.
+6. Only if none of rules 1-5 applies may decision be QUALIFIED.
 Generate the evidence fields first and decision afterward.`;
 }
 
@@ -214,6 +219,8 @@ function assertLogicalConsistency(
     result.excludedSeniority ||
     result.excludedDomain ||
     result.excludedEmploymentType ||
+    (filters.sponsorship.rejectNegativeStatements &&
+      !result.sponsorshipEligible) ||
     result.experienceStatus === "OVER_LIMIT" ||
     (result.experienceStatus === "NOT_SPECIFIED" &&
       !filters.experience.acceptWhenNotSpecified);
