@@ -59,6 +59,8 @@ All editable qualification rules live in [`config/filters.yaml`](config/filters.
 - Considers jobs posted within the last 24 hours.
 - Accepts U.S. locations, U.S.-remote roles, and multi-location roles containing a U.S. location.
 - Requires a configured software-development title match.
+- Normalizes punctuation and whitespace, so titles such as `Full-Stack Engineer` match configured phrases such as `full stack engineer`.
+- Allows generic developer titles such as `Platform Developer` through the cheap stage for final AI validation.
 - Rejects excluded titles, seniority levels, and employment types during cheap filtering.
 - Uses AI to confirm role relevance, location eligibility, seniority, excluded technical domains, employment type, and mandatory experience.
 - Accepts at most four years of mandatory professional experience.
@@ -80,6 +82,8 @@ S.No | Company | Job URL | Title
 ```
 
 `S.No` continues from the highest existing numeric value.
+
+Each run groups new rows beneath the next Pacific calendar day's heading. For example, a run on September 13 uses `SEPT 14 2026`. The service reuses that heading when it already exists; otherwise, it appends the heading once before the new jobs.
 
 ## Local Setup
 

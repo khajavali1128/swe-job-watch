@@ -56,6 +56,7 @@ export class GoogleSheetsJobStore {
 
   async appendQualifiedJobs(
     records: QualifiedJob[],
+    runAt = new Date(),
   ): Promise<AppendQualifiedJobsResult> {
     const sheetTab = await this.resolveSheetTab();
     await this.ensureHeaders();
@@ -83,12 +84,16 @@ export class GoogleSheetsJobStore {
       };
     }
 
-    const rows = newRecords.map(({ job }, index) => [
+    const targetDateHeading = formatNextDayHeading(runAt);
+    const jobRows = newRecords.map(({ job }, index) => [
       sheetState.highestSerialNumber + index + 1,
       job.companyName,
       job.url,
       job.title,
     ]);
+    const rows = sheetState.dateHeadings.has(targetDateHeading)
+      ? jobRows
+      : [["", "", targetDateHeading, ""], ...jobRows];
 
     await this.sheets.spreadsheets.values.append({
       spreadsheetId: this.config.spreadsheetId,
@@ -126,6 +131,7 @@ export class GoogleSheetsJobStore {
   private async readSheetState(): Promise<{
     existingUrls: Set<string>;
     highestSerialNumber: number;
+    dateHeadings: Set<string>;
   }> {
     const sheetTab = await this.resolveSheetTab();
     const response = await this.sheets.spreadsheets.values.get({
@@ -139,7 +145,7 @@ export class GoogleSheetsJobStore {
         rows
           .map((row) => row[2])
           .filter((value): value is string =>
-            typeof value === "string" && value.length > 0
+            typeof value === "string" && /^https?:\/\//i.test(value)
           ),
       ),
       highestSerialNumber: rows.reduce((highest, row) => {
@@ -148,6 +154,14 @@ export class GoogleSheetsJobStore {
           ? Math.max(highest, serialNumber)
           : highest;
       }, 0),
+      dateHeadings: new Set(
+        rows
+          .flatMap((row) => row)
+          .filter((value): value is string =>
+            typeof value === "string" && DATE_HEADING_PATTERN.test(value)
+          )
+          .map(normalizeDateHeading),
+      ),
     };
   }
 
@@ -222,4 +236,68 @@ function sheetName(value: string): string {
 
 function jobKey(job: JobDetails): string {
   return job.url;
+}
+
+const PACIFIC_TIME_ZONE = "America/Los_Angeles";
+const DATE_HEADING_PATTERN =
+  /^(?:JAN|FEB|MAR(?:CH)?|APR(?:IL)?|MAY|JUN(?:E)?|JUL(?:Y)?|AUG|SEP(?:T)?|OCT|NOV|DEC)\s+\d{1,2}\s+\d{4}$/i;
+const MONTH_HEADINGS = [
+  "JAN",
+  "FEB",
+  "MARCH",
+  "APRIL",
+  "MAY",
+  "JUNE",
+  "JULY",
+  "AUG",
+  "SEPT",
+  "OCT",
+  "NOV",
+  "DEC",
+];
+
+function formatNextDayHeading(runAt: Date): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: PACIFIC_TIME_ZONE,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+  }).formatToParts(runAt);
+  const values = Object.fromEntries(
+    parts.map(({ type, value }) => [type, value]),
+  );
+  const nextDay = new Date(
+    Date.UTC(
+      Number(values.year),
+      Number(values.month) - 1,
+      Number(values.day) + 1,
+    ),
+  );
+
+  return `${MONTH_HEADINGS[nextDay.getUTCMonth()]} ${nextDay.getUTCDate()} ${nextDay.getUTCFullYear()}`;
+}
+
+function normalizeDateHeading(value: string): string {
+  const [month, day, year] = value.trim().toUpperCase().split(/\s+/);
+  const monthAliases: Record<string, string> = {
+    JAN: "JAN",
+    FEB: "FEB",
+    MAR: "MARCH",
+    MARCH: "MARCH",
+    APR: "APRIL",
+    APRIL: "APRIL",
+    MAY: "MAY",
+    JUN: "JUNE",
+    JUNE: "JUNE",
+    JUL: "JULY",
+    JULY: "JULY",
+    AUG: "AUG",
+    SEP: "SEPT",
+    SEPT: "SEPT",
+    OCT: "OCT",
+    NOV: "NOV",
+    DEC: "DEC",
+  };
+
+  return `${monthAliases[month ?? ""] ?? month} ${Number(day)} ${year}`;
 }

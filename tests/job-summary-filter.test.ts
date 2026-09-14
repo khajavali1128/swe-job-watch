@@ -38,6 +38,18 @@ describe("filterJobSummaries", () => {
     expect(filterJobSummaries([makeJob()], filters, NOW)).toHaveLength(1);
   });
 
+  it("normalizes punctuation in configured role titles", () => {
+    const job = makeJob({ title: "Full-Stack Engineer" });
+
+    expect(filterJobSummaries([job], filters, NOW)).toHaveLength(1);
+  });
+
+  it("allows developer titles through for AI validation", () => {
+    const job = makeJob({ title: "Platform Developer" });
+
+    expect(filterJobSummaries([job], filters, NOW)).toHaveLength(1);
+  });
+
   it("rejects a listing outside the freshness window", () => {
     const job = makeJob({
       postedAt: new Date("2026-09-12T11:59:59.000Z"),

@@ -164,9 +164,12 @@ function matchesLocation(
 }
 
 function matchesRole(title: string, filters: FiltersConfig): boolean {
-  const normalizedTitle = normalize(title, filters.roles.caseSensitive);
+  const normalizedTitle = normalizeForMatch(
+    title,
+    filters.roles.caseSensitive,
+  );
   const normalizeTerm = (term: string): string =>
-    normalize(term, filters.roles.caseSensitive);
+    normalizeForMatch(term, filters.roles.caseSensitive);
 
   const includesRole = filters.roles.include.some((term) =>
     normalizedTitle.includes(normalizeTerm(term)),
@@ -189,10 +192,16 @@ function matchesEmploymentType(
   title: string,
   filters: FiltersConfig,
 ): boolean {
-  const normalizedTitle = normalize(title, filters.roles.caseSensitive);
+  const normalizedTitle = normalizeForMatch(
+    title,
+    filters.roles.caseSensitive,
+  );
 
   return !filters.employmentType.exclude.some((term) => {
-    const normalizedTerm = normalize(term, filters.roles.caseSensitive);
+    const normalizedTerm = normalizeForMatch(
+      term,
+      filters.roles.caseSensitive,
+    );
     const variants = [normalizedTerm];
 
     if (normalizedTerm.endsWith("ship")) {
@@ -207,6 +216,13 @@ function matchesEmploymentType(
 
 function normalize(value: string, caseSensitive: boolean): string {
   return caseSensitive ? value : value.toLowerCase();
+}
+
+function normalizeForMatch(value: string, caseSensitive: boolean): string {
+  return normalize(value, caseSensitive)
+    .replace(/[^a-zA-Z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
 }
 
 function escapeRegExp(value: string): string {
