@@ -1,98 +1,204 @@
 # SWE Job Watch
 
-SWE Job Watch checks public applicant tracking system boards once per day, finds postings from the last 25 hours, and appends them to a Google Sheet.
+SWE Job Watch is a scheduled Node.js and TypeScript service that scans public ATS job boards, filters recently opened U.S. software-engineering roles, validates full job descriptions with AI, and appends qualified jobs to Google Sheets.
 
-The first version supports:
+The production service currently checks 26 enabled companies across Greenhouse and SmartRecruiters. Lever is implemented, but its companies are disabled because Lever's public postings API does not provide a reliable publication timestamp.
 
-- Greenhouse
-- Lever
-- SmartRecruiters
+## Workflow
 
-## How It Works
-
-1. You list target companies in `config/companies.yaml`.
-2. You define qualification rules in `config/filters.yaml`.
-3. The service fetches each public jobs API.
-4. It normalizes every posting into one common shape.
-5. It filters by freshness, title keywords, location, seniority, and employment type.
-6. Gemini validates the full descriptions of jobs that survive those filters.
-7. It appends qualified, non-duplicate jobs to Google Sheets.
-
-## Quick Start
-
-Requires Node.js 20 or newer.
-
-```sh
-cp .env.example .env
-npm run check
-npm run dry-run
+```text
+companies.yaml + filters.yaml
+            |
+            v
+Greenhouse / Lever / SmartRecruiters listing APIs
+            |
+            v
+Normalized JobSummary[]
+            |
+            v
+Cheap deterministic filters
+  freshness, U.S. location, role title,
+  seniority, and employment type
+            |
+            v
+Fetch full descriptions only for survivors
+            |
+            v
+OpenAI validation (gpt-5-nano)
+            |
+       failure only
+            v
+Gemini fallback (gemini-3.5-flash-lite)
+            |
+            v
+Zod validation + logical consistency checks
+            |
+            v
+Qualified and non-duplicate jobs -> Google Sheets
+            |
+            v
+Gmail run-summary notification
 ```
 
-Then edit:
+Provider failures are isolated by company, and AI failures are isolated by job. The service continues processing, sends the final summary when email is configured, and exits unsuccessfully if any failures occurred so GitHub Actions records the run accurately.
 
-- `.env` for Google Sheets credentials
-- `config/companies.yaml` for companies to watch
-- `config/filters.yaml` for matching rules
+## ATS Support
 
-Build and run for real:
+| Provider | Listing date | Full description | Status |
+| --- | --- | --- | --- |
+| Greenhouse | `first_published` | Individual job endpoint | Enabled |
+| SmartRecruiters | `releasedDate` | Individual posting endpoint | Enabled |
+| Lever | Not exposed | Individual posting endpoint | Implemented; companies disabled |
 
-```sh
+Every adapter produces the shared `JobSummary` and `JobDetails` types. SmartRecruiters pagination is handled automatically, and its applicant-facing URL is obtained from the detail response before a job reaches the sheet.
+
+## Qualification Rules
+
+All editable qualification rules live in [`config/filters.yaml`](config/filters.yaml). The current policy:
+
+- Considers jobs posted within the last 24 hours.
+- Accepts U.S. locations, U.S.-remote roles, and multi-location roles containing a U.S. location.
+- Requires a configured software-development title match.
+- Rejects excluded titles, seniority levels, and employment types during cheap filtering.
+- Uses AI to confirm role relevance, location eligibility, seniority, excluded technical domains, employment type, and mandatory experience.
+- Accepts at most four years of mandatory professional experience.
+- Ignores preferred experience when configured to do so.
+- Accepts jobs without an explicit numeric experience minimum when configured to do so.
+
+Missing publication dates follow `freshness.allowFirstSeenFallback`. With the current `true` setting, enabling a Lever company would allow all of its otherwise matching listings through the freshness stage, so Lever remains disabled.
+
+Companies and ATS handles live in [`config/companies.yaml`](config/companies.yaml). Set `enabled: false` to stop checking a company without removing it.
+
+## Google Sheet
+
+Only AI-qualified jobs are considered for insertion. Before appending, the service reads the existing Job URL column and skips URLs already present in the sheet.
+
+Rows use this layout:
+
+```text
+S.No | Company | Job URL | Title
+```
+
+`S.No` continues from the highest existing numeric value.
+
+## Local Setup
+
+Requirements:
+
+- Node.js 20 or newer
+- An OpenAI API key
+- A Gemini API key for fallback
+- A Google Cloud service account with the Google Sheets API enabled
+- Editor access for the service-account email on the target spreadsheet
+- Optional Gmail account with 2-Step Verification and an App Password
+
+Install dependencies and create local configuration:
+
+```bash
+npm install
+cp .env.example .env
+```
+
+Required local environment variables:
+
+| Variable | Purpose |
+| --- | --- |
+| `OPENAI_API_KEY` | Primary AI validation |
+| `OPENAI_MODEL` | Primary model; defaults to `gpt-5-nano` |
+| `GEMINI_API_KEY` | Fallback AI validation |
+| `GEMINI_MODEL` | Fallback model; defaults to `gemini-3.5-flash-lite` |
+| `GOOGLE_SHEET_ID` | Spreadsheet ID from its URL |
+| `GOOGLE_SHEET_GID` | Numeric target-tab ID; defaults to `0` |
+| `GOOGLE_SERVICE_ACCOUNT_KEY_FILE` | Absolute path to the downloaded service-account JSON |
+
+Instead of a JSON file, Google authentication also accepts both `GOOGLE_SERVICE_ACCOUNT_EMAIL` and `GOOGLE_PRIVATE_KEY`.
+
+Optional email variables:
+
+| Variable | Purpose |
+| --- | --- |
+| `EMAIL_USER` | Gmail sender account |
+| `EMAIL_APP_PASSWORD` | App Password generated by the sender account |
+| `EMAIL_TO` | Summary recipient |
+
+The sender and recipient may be the same Gmail account. Never use a normal Gmail password.
+
+## Commands
+
+```bash
+# Validate YAML configuration and Google Sheets access
+npm run check
+
+# Run the complete service without Sheet writes or email
+# ATS and AI requests are still live
+npm run dry-run
+
+# Run the real service from TypeScript; writes qualified jobs and sends email
+npm run dev
+
+# Compile and run the real production build
 npm run build
 npm start
+
+# Unit tests and static type checking
+npm test
+npm run typecheck
 ```
 
-## Company Config
+The focused end-to-end harness fetches live ATS data and validates at most one surviving job per company. It does not write to Sheets or send email:
 
-Each company entry needs:
+```bash
+# All enabled companies
+npm run test:workflow
 
-- `name`: company display name
-- `enabled`: whether to include it in runs
-- `adapter`: `greenhouse`, `lever`, or `smartrecruiters`
-- `handle`: public ATS slug
+# One enabled company
+npm run test:workflow -- doordash
 
-Example:
-
-```yaml
-companies:
-  - id: airbnb
-    name: Airbnb
-    enabled: true
-    adapter: greenhouse
-    handle: airbnb
+# One specific job, if it survives cheap filtering
+npm run test:workflow -- doordash JOB_ID
 ```
 
-## Google Sheets Setup
+## GitHub Actions
 
-1. Create a Google Cloud project.
-2. Enable the Google Sheets API.
-3. Create a service account.
-4. Create and download a JSON key.
-5. Share the target spreadsheet with the service account email.
-6. Set `GOOGLE_SERVICE_ACCOUNT_KEY_FILE` to the downloaded JSON file path.
+[`job-watch.yml`](.github/workflows/job-watch.yml) runs the production service every day at `01:00 UTC`, which is `5:00 PM PST` and `6:00 PM PDT`. GitHub may start scheduled workflows a few minutes late.
 
-Required environment variables:
+The workflow can also be run manually from **Actions -> SWE Job Watch -> Run workflow**, or with:
 
-- `GOOGLE_SHEET_ID`
-- `GOOGLE_SHEET_GID`
-- `GOOGLE_SERVICE_ACCOUNT_KEY_FILE`
-- `GEMINI_API_KEY`
+```bash
+gh workflow run job-watch.yml
+gh run watch
+```
+
+The repository requires these GitHub Actions secrets:
+
 - `OPENAI_API_KEY`
+- `GEMINI_API_KEY`
+- `GOOGLE_SERVICE_ACCOUNT_JSON`: complete contents of the downloaded JSON key
+- `EMAIL_USER`
+- `EMAIL_APP_PASSWORD`
+- `EMAIL_TO`
 
-## Sheet Columns
+Each cloud run installs dependencies, type-checks, runs unit tests, builds TypeScript, executes the real job watcher, updates the sheet, and sends the summary email.
 
-The service appends rows in this order:
+## Project Structure
 
-`S.No`, `Company`, `Job URL`, `Title`
+```text
+config/                            Companies and qualification policy
+scripts/test-workflow.ts           Focused live end-to-end harness
+src/adapters/                      ATS integrations and shared contract
+src/ai/job-validator.ts            OpenAI primary and Gemini fallback
+src/config/                        YAML loading and Zod validation
+src/email/run-summary.ts           Gmail run summary
+src/filters/job-summary-filter.ts  Cheap deterministic filtering
+src/sheets/google-sheets.ts        Deduplication and Sheet append
+src/index.ts                       Production orchestration
+src/types.ts                       Normalized job domain types
+tests/                             Unit tests
+```
 
-## Daily Schedule
+## Security
 
-The GitHub Actions workflow in `.github/workflows/job-watch.yml` runs daily at 01:00 UTC (5:00 PM PST). Add these repository secrets before enabling it:
-
-- `GEMINI_API_KEY`: your Gemini API key
-- `OPENAI_API_KEY`: your OpenAI API key used for primary validation
-- `GOOGLE_SERVICE_ACCOUNT_JSON`: the complete contents of the downloaded service-account JSON file
-- `EMAIL_USER`: Gmail address used to send run summaries
-- `EMAIL_APP_PASSWORD`: Google app password for that Gmail account
-- `EMAIL_TO`: address that receives run summaries
-
-You can also run it anywhere that supports scheduled commands, such as cron, Render, Railway, Fly.io, or a small VPS.
+- `.env`, `node_modules`, and `dist` are ignored by Git.
+- Never commit API keys, Gmail App Passwords, or service-account JSON files.
+- Keep deployment credentials in GitHub Actions secrets.
+- API job descriptions are sent to OpenAI first and to Gemini only if OpenAI validation fails.
