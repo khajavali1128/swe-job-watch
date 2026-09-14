@@ -19,11 +19,6 @@ companies:
   enabled: true
   adapter: greenhouse
   handle: doordashusa
-- id: hubspot
-  name: HubSpot
-  enabled: false
-  adapter: greenhouse
-  handle: hubspot
 - id: datadog
   name: Datadog
   enabled: true
@@ -299,3 +294,78 @@ companies:
   enabled: true
   adapter: ashby
   handle: ashby
+- id: figma
+  name: Figma
+  enabled: true
+  adapter: greenhouse
+  handle: figma
+- id: reddit
+  name: Reddit
+  enabled: true
+  adapter: greenhouse
+  handle: reddit
+- id: vercel
+  name: Vercel
+  enabled: true
+  adapter: greenhouse
+  handle: vercel
+- id: discord
+  name: Discord
+  enabled: true
+  adapter: greenhouse
+  handle: discord
+- id: chime
+  name: Chime
+  enabled: true
+  adapter: greenhouse
+  handle: chime
+- id: glean
+  name: Glean
+  enabled: true
+  adapter: greenhouse
+  handle: gleanwork
+- id: instabase
+  name: Instabase
+  enabled: true
+  adapter: greenhouse
+  handle: instabase
+- id: grafana-labs
+  name: Grafana Labs
+  enabled: true
+  adapter: greenhouse
+  handle: grafanalabs
+- id: gitlab
+  name: GitLab
+  enabled: true
+  adapter: greenhouse
+  handle: gitlab
+- id: pagerduty
+  name: PagerDuty
+  enabled: true
+  adapter: greenhouse
+  handle: pagerduty
+- id: scale-ai
+  name: Scale AI
+  enabled: true
+  adapter: greenhouse
+  handle: scaleai
+- id: airtable
+  name: Airtable
+  enabled: true
+  adapter: greenhouse
+  handle: airtable
+- id: webflow
+  name: Webflow
+  enabled: true
+  adapter: greenhouse
+  handle: webflow
+- id: new-relic
+  name: New Relic
+  enabled: true
+  adapter: greenhouse
+  handle: newrelic
+- id: sigma-computing
+  name: Sigma Computing
+  enabled: true
+  adapter: greenhouse
+  handle: sigmacomputing
