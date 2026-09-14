@@ -1,0 +1,84 @@
+# SWE Job Watch - job qualification rules
+
+freshness:
+  lookbackHours: 24
+  requireOpenJob: true
+  allowFirstSeenFallback: true
+  useUpdatedAtAsPostedAt: false
+
+location:
+  country: US
+  allowRemoteUS: true
+  allowMultiLocationWithUS: true
+  rejectNonUSOnly: true
+
+roles:
+  matchMode: contains
+  caseSensitive: false
+
+  include:
+    - software engineer
+    - software development engineer
+    - backend engineer
+    - frontend engineer
+    - full stack engineer
+    - site reliability engineer
+    - distributed engineer
+    - software developer
+    - software
+    - distributed systems
+
+  excludeTitles:
+    - software engineering manager
+    - software development manager
+    - test engineer
+    - software test
+    - qa engineer
+    - quality assurance
+    - validation engineer
+    - firmware engineer
+    - embedded software
+    - robotics software
+
+  excludeDomains:
+    - robotics
+    - autonomy
+    - controls
+    - calibration
+    - mapping
+    - localization
+    - drone
+    - flight
+    - electrical
+    - electronics
+    - firmware
+    - embedded
+    - hardware
+    - mechanical
+    - manufacturing
+    - validation
+    - test engineering
+
+seniority:
+  exclude:
+    - staff
+    - senior staff
+    - principal
+    - distinguished
+    - manager
+    - director
+
+experience:
+  maxRequiredYears: 4
+  acceptWhenNotSpecified: true
+  ignorePreferredQualifications: true
+
+employmentType:
+  include:
+    - full-time
+
+  exclude:
+    - internship
+    - co-op
+    - apprenticeship
+    - student program
