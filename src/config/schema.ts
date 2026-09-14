@@ -8,7 +8,7 @@ export const CompanySchema = z
     id: nonEmptyString,
     name: nonEmptyString,
     enabled: z.boolean(),
-    adapter: z.enum(["greenhouse", "lever", "smartrecruiters"]),
+    adapter: z.enum(["greenhouse", "lever", "smartrecruiters", "ashby"]),
     handle: nonEmptyString,
   })
   .strict();

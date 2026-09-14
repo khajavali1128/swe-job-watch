@@ -2,7 +2,7 @@
 
 SWE Job Watch is a scheduled Node.js and TypeScript service that scans public ATS job boards, filters recently opened U.S. software-engineering roles, validates full job descriptions with AI, and appends qualified jobs to Google Sheets.
 
-The production service currently checks 26 enabled companies across Greenhouse and SmartRecruiters. Lever is implemented, but its companies are disabled because Lever's public postings API does not provide a reliable publication timestamp.
+The production service currently checks 55 enabled companies across Ashby, Greenhouse, and SmartRecruiters. Lever is implemented, but its companies are disabled because Lever's public postings API does not provide a reliable publication timestamp.
 
 ## Workflow
 
@@ -10,7 +10,7 @@ The production service currently checks 26 enabled companies across Greenhouse a
 companies.yaml + filters.yaml
             |
             v
-Greenhouse / Lever / SmartRecruiters listing APIs
+Ashby / Greenhouse / Lever / SmartRecruiters listing APIs
             |
             v
 Normalized JobSummary[]
@@ -46,11 +46,12 @@ Provider failures are isolated by company, and AI failures are isolated by job. 
 
 | Provider | Listing date | Full description | Status |
 | --- | --- | --- | --- |
+| Ashby | `publishedAt` | Included in board response and cached | Enabled |
 | Greenhouse | `first_published` | Individual job endpoint | Enabled |
 | SmartRecruiters | `releasedDate` | Individual posting endpoint | Enabled |
 | Lever | Not exposed | Individual posting endpoint | Implemented; companies disabled |
 
-Every adapter produces the shared `JobSummary` and `JobDetails` types. SmartRecruiters pagination is handled automatically, and its applicant-facing URL is obtained from the detail response before a job reaches the sheet.
+Every adapter produces the shared `JobSummary` and `JobDetails` types. Ashby descriptions are cached from the board response to avoid per-job requests. SmartRecruiters pagination is handled automatically, and its applicant-facing URL is obtained from the detail response before a job reaches the sheet.
 
 ## Qualification Rules
 

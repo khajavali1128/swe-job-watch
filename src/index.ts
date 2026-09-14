@@ -1,4 +1,5 @@
 import { GreenhouseAdapter } from "./adapters/greenhouse.js";
+import { AshbyAdapter } from "./adapters/ashby.js";
 import { LeverAdapter } from "./adapters/lever.js";
 import { SmartRecruitersAdapter } from "./adapters/smartrecruiters.js";
 import type { JobAdapter } from "./adapters/types.js";
@@ -125,6 +126,8 @@ async function main(): Promise<void> {
 
 function createAdapter(company: CompanyConfig): JobAdapter {
   switch (company.adapter) {
+    case "ashby":
+      return new AshbyAdapter();
     case "greenhouse":
       return new GreenhouseAdapter();
     case "lever":
