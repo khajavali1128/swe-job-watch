@@ -21,7 +21,7 @@ companies:
   handle: doordashusa
 - id: hubspot
   name: HubSpot
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: hubspot
 - id: datadog
