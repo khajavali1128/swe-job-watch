@@ -76,6 +76,7 @@ Required environment variables:
 - `GOOGLE_SHEET_GID`
 - `GOOGLE_SERVICE_ACCOUNT_KEY_FILE`
 - `GEMINI_API_KEY`
+- `OPENAI_API_KEY`
 
 ## Sheet Columns
 
@@ -88,6 +89,7 @@ The service appends rows in this order:
 The GitHub Actions workflow in `.github/workflows/job-watch.yml` runs daily at 01:00 UTC (5:00 PM PST). Add these repository secrets before enabling it:
 
 - `GEMINI_API_KEY`: your Gemini API key
+- `OPENAI_API_KEY`: your OpenAI API key used for primary validation
 - `GOOGLE_SERVICE_ACCOUNT_JSON`: the complete contents of the downloaded service-account JSON file
 - `EMAIL_USER`: Gmail address used to send run summaries
 - `EMAIL_APP_PASSWORD`: Google app password for that Gmail account

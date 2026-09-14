@@ -2,7 +2,7 @@ import { GreenhouseAdapter } from "./adapters/greenhouse.js";
 import { LeverAdapter } from "./adapters/lever.js";
 import { SmartRecruitersAdapter } from "./adapters/smartrecruiters.js";
 import type { JobAdapter } from "./adapters/types.js";
-import { validateJobWithGemini } from "./ai/job-validator.js";
+import { validateJob } from "./ai/job-validator.js";
 import { loadConfig, type CompanyConfig } from "./config/index.js";
 import { filterJobSummaries } from "./filters/job-summary-filter.js";
 import { sendRunSummaryEmail } from "./email/run-summary.js";
@@ -61,7 +61,7 @@ async function main(): Promise<void> {
       for (const candidate of candidates) {
         try {
           const details = await adapter.fetchJobDetails(company, candidate);
-          const validation = await validateJobWithGemini(
+          const validation = await validateJob(
             details,
             config.filters,
           );

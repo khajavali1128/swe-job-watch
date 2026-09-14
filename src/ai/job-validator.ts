@@ -1,4 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
+import OpenAI from "openai";
+import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
 
 import type { FiltersConfig } from "../config/index.js";
@@ -27,6 +29,7 @@ export type JobValidationResult = z.infer<
 >;
 
 const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash-lite";
+const DEFAULT_OPENAI_MODEL = "gpt-5-mini";
 const responseJsonSchema = z.toJSONSchema(JobValidationResultSchema);
 delete (responseJsonSchema as Record<string, unknown>).$schema;
 (responseJsonSchema as Record<string, unknown>).propertyOrdering = [
@@ -134,6 +137,60 @@ export async function validateJobWithGemini(
   return validationResult.data;
 }
 
+export async function validateJobWithOpenAI(
+  job: JobDetails,
+  filters: FiltersConfig,
+): Promise<JobValidationResult> {
+  const apiKey = process.env.OPENAI_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY is required to validate jobs with OpenAI");
+  }
+
+  const client = new OpenAI({ apiKey });
+  const response = await client.responses.parse({
+    model: process.env.OPENAI_MODEL || DEFAULT_OPENAI_MODEL,
+    input: buildPrompt(job, filters),
+    text: {
+      format: zodTextFormat(
+        JobValidationResultSchema,
+        "job_validation_result",
+      ),
+    },
+  });
+  const parsedResponse = response.output_parsed;
+
+  if (!parsedResponse) {
+    throw new Error("OpenAI returned an empty job validation response");
+  }
+
+  const validationResult = JobValidationResultSchema.safeParse(parsedResponse);
+
+  if (!validationResult.success) {
+    throw new Error(
+      `OpenAI returned an invalid job validation result: ${validationResult.error.message}`,
+      { cause: validationResult.error },
+    );
+  }
+
+  assertLogicalConsistency(validationResult.data, filters);
+  return validationResult.data;
+}
+
+export async function validateJob(
+  job: JobDetails,
+  filters: FiltersConfig,
+): Promise<JobValidationResult> {
+  try {
+    return await validateJobWithOpenAI(job, filters);
+  } catch (error) {
+    console.warn(
+      `OpenAI validation failed; falling back to Gemini: ${errorMessage(error)}`,
+    );
+    return validateJobWithGemini(job, filters);
+  }
+}
+
 function assertLogicalConsistency(
   result: JobValidationResult,
   filters: FiltersConfig,
@@ -167,4 +224,8 @@ function assertLogicalConsistency(
       `Gemini returned an inconsistent decision: expected ${expectedDecision} from the structured validation fields, received ${result.decision}`,
     );
   }
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }

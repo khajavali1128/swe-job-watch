@@ -2,7 +2,7 @@ import { GreenhouseAdapter } from "../src/adapters/greenhouse.js";
 import { LeverAdapter } from "../src/adapters/lever.js";
 import { SmartRecruitersAdapter } from "../src/adapters/smartrecruiters.js";
 import type { JobAdapter } from "../src/adapters/types.js";
-import { validateJobWithGemini } from "../src/ai/job-validator.js";
+import { validateJob } from "../src/ai/job-validator.js";
 import {
   loadConfig,
   type CompanyConfig,
@@ -61,8 +61,8 @@ async function testCompany(
     });
 
     const details = await adapter.fetchJobDetails(company, selectedJob);
-    console.log(`[${company.name}] Validating with Gemini...`);
-    const validation = await validateJobWithGemini(details, filters);
+    console.log(`[${company.name}] Validating with AI...`);
+    const validation = await validateJob(details, filters);
 
     console.log(
       JSON.stringify(
