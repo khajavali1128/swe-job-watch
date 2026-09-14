@@ -151,6 +151,14 @@ npm test
 npm run typecheck
 ```
 
+Audit every configured company's public ATS listing API without running filters, AI validation, Sheets writes, or email:
+
+```bash
+npm run test:companies
+```
+
+The audit includes disabled companies and marks each result as `PASS`, `EMPTY`, or `FAIL`.
+
 The focused end-to-end harness fetches live ATS data and validates at most one surviving job per company. It does not write to Sheets or send email:
 
 ```bash
@@ -191,6 +199,7 @@ Each cloud run installs dependencies, type-checks, runs unit tests, builds TypeS
 ```text
 config/                            Companies and qualification policy
 scripts/test-workflow.ts           Focused live end-to-end harness
+scripts/test-company-apis.ts       Public ATS listing API audit
 src/adapters/                      ATS integrations and shared contract
 src/ai/job-validator.ts            OpenAI primary and Gemini fallback
 src/config/                        YAML loading and Zod validation
