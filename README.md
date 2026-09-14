@@ -85,9 +85,12 @@ The service appends rows in this order:
 
 ## Daily Schedule
 
-The GitHub Actions workflow in `.github/workflows/job-watch.yml` runs daily at 14:00 UTC. Add these repository secrets before enabling it:
+The GitHub Actions workflow in `.github/workflows/job-watch.yml` runs daily at 01:00 UTC (5:00 PM PST). Add these repository secrets before enabling it:
 
 - `GEMINI_API_KEY`: your Gemini API key
 - `GOOGLE_SERVICE_ACCOUNT_JSON`: the complete contents of the downloaded service-account JSON file
+- `EMAIL_USER`: Gmail address used to send run summaries
+- `EMAIL_APP_PASSWORD`: Google app password for that Gmail account
+- `EMAIL_TO`: address that receives run summaries
 
 You can also run it anywhere that supports scheduled commands, such as cron, Render, Railway, Fly.io, or a small VPS.

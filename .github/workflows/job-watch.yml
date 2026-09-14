@@ -38,4 +38,7 @@ jobs:
           GOOGLE_SHEET_ID: 1S6Ph0f5Q6J-YvHuBWG1xsFmnb_Md0eMlxeYT---Bjdg
           GOOGLE_SHEET_GID: "0"
           GOOGLE_SERVICE_ACCOUNT_KEY_FILE: ${{ runner.temp }}/google-service-account.json
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
         run: node dist/index.js

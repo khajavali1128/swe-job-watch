@@ -5,6 +5,7 @@ import type { JobAdapter } from "./adapters/types.js";
 import { validateJobWithGemini } from "./ai/job-validator.js";
 import { loadConfig, type CompanyConfig } from "./config/index.js";
 import { filterJobSummaries } from "./filters/job-summary-filter.js";
+import { sendRunSummaryEmail } from "./email/run-summary.js";
 import {
   GoogleSheetsJobStore,
   type QualifiedJob,
@@ -86,12 +87,17 @@ async function main(): Promise<void> {
     }
   }
 
+  let appended = 0;
+  let duplicates = 0;
+
   if (dryRun) {
     console.log(
       `\nDry run: ${qualifiedJobs.length} qualified jobs were not written`,
     );
   } else {
     const result = await sheetStore.appendQualifiedJobs(qualifiedJobs);
+    appended = result.appended;
+    duplicates = result.duplicates;
     console.log(
       `\nGoogle Sheets: appended ${result.appended}, skipped ${result.duplicates} duplicates`,
     );
@@ -99,6 +105,18 @@ async function main(): Promise<void> {
 
   console.log("\nRun summary:");
   console.table(totals);
+
+  if (!dryRun) {
+    const emailSent = await sendRunSummaryEmail({
+      ...totals,
+      appended,
+      duplicates,
+    });
+
+    if (emailSent) {
+      console.log("Email summary sent");
+    }
+  }
 
   if (totals.failed > 0) {
     process.exitCode = 1;
