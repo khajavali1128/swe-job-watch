@@ -80,7 +80,7 @@ companies:
   adapter: greenhouse
   handle: lyft
 - id: roblox
-  name: Roblox
+  name: Roblox # Does not sponsor H1B
   enabled: false
   adapter: greenhouse
   handle: roblox
