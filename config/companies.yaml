@@ -369,3 +369,8 @@ companies:
   enabled: true
   adapter: greenhouse
   handle: sigmacomputing
+- id: snowflake
+  name: Snowflake
+  enabled: true
+  adapter: ashby
+  handle: snowflake

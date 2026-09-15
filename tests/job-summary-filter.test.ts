@@ -44,6 +44,19 @@ describe("filterJobSummaries", () => {
     expect(filterJobSummaries([job], filters, NOW)).toHaveLength(1);
   });
 
+  it("accepts common joined and separated engineering title variants", () => {
+    const jobs = [
+      makeJob({
+        jobId: "fullstack",
+        title: "Frontend /Fullstack Engineer - Marketplace",
+      }),
+      makeJob({ jobId: "frontend", title: "Front-End Engineer" }),
+      makeJob({ jobId: "backend", title: "Back-End Engineer" }),
+    ];
+
+    expect(filterJobSummaries(jobs, filters, NOW)).toHaveLength(3);
+  });
+
   it("allows developer titles through for AI validation", () => {
     const job = makeJob({ title: "Platform Developer" });
 
