@@ -181,7 +181,7 @@ npm run test:workflow -- doordash JOB_ID
 
 ## GitHub Actions
 
-[`job-watch.yml`](.github/workflows/job-watch.yml) runs the production service every day at `01:00 UTC`, which is `5:00 PM PST` and `6:00 PM PDT`. GitHub may start scheduled workflows a few minutes late.
+[`job-watch.yml`](.github/workflows/job-watch.yml) runs the production service twice daily at `20:00 UTC` and `02:00 UTC`, which are `12:00 PM PST` and `6:00 PM PST`. During daylight-saving time, the same fixed UTC schedules run at `1:00 PM PDT` and `7:00 PM PDT`. GitHub may start scheduled workflows a few minutes late.
 
 The workflow can also be run manually from **Actions -> SWE Job Watch -> Run workflow**, or with:
 
