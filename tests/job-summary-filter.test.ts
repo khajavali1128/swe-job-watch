@@ -101,6 +101,21 @@ describe("filterJobSummaries", () => {
     expect(filterJobSummaries([job], filters, NOW)).toHaveLength(0);
   });
 
+  it("rejects new-graduate software roles", () => {
+    const jobs = [
+      makeJob({
+        jobId: "new-grad",
+        title: "Software Engineer - New Grad",
+      }),
+      makeJob({
+        jobId: "new-graduate",
+        title: "Software Engineer, New Graduate",
+      }),
+    ];
+
+    expect(filterJobSummaries(jobs, filters, NOW)).toHaveLength(0);
+  });
+
   it("allows a missing posted date when first-seen fallback is enabled", () => {
     const job = makeJob({ postedAt: null });
 

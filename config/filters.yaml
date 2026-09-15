@@ -30,6 +30,7 @@ roles:
     - distributed systems
 
   excludeTitles:
+    - new grad
     - software engineering manager
     - software development manager
     - test engineer
