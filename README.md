@@ -2,7 +2,7 @@
 
 SWE Job Watch is a scheduled Node.js and TypeScript service that scans public ATS job boards, filters recently opened U.S. software-engineering roles, validates full job descriptions with AI, and appends qualified jobs to Google Sheets.
 
-The production service currently checks 103 enabled companies across Ashby, Greenhouse, and SmartRecruiters. Lever is implemented, but its companies are disabled because Lever's public postings API does not provide a reliable publication timestamp.
+The production service currently checks 102 enabled companies across Ashby, Greenhouse, and SmartRecruiters. Lever is implemented, but its companies are disabled because Lever's public postings API does not provide a reliable publication timestamp.
 
 ## Workflow
 

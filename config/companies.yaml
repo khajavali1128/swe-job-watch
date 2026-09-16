@@ -501,7 +501,7 @@ companies:
   handle: amplitude
 - id: cursor
   name: Cursor
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: cursor
 - id: docker
