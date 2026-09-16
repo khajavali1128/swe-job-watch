@@ -1,5 +1,6 @@
 import type { CompanyConfig } from "../config/index.js";
 import type { JobDetails, JobSummary } from "../types.js";
+import { AdapterHttpError } from "./errors.js";
 import type { JobAdapter } from "./types.js";
 
 interface SmartRecruitersLocation {
@@ -60,8 +61,11 @@ export class SmartRecruitersAdapter implements JobAdapter {
       const response = await fetch(url);
 
       if (!response.ok) {
-        throw new Error(
-          `SmartRecruiters request failed for ${company.name}: ${response.status} ${response.statusText}`,
+        throw new AdapterHttpError(
+          "SmartRecruiters",
+          company.name,
+          response.status,
+          response.statusText,
         );
       }
 
@@ -98,8 +102,11 @@ export class SmartRecruitersAdapter implements JobAdapter {
     const response = await fetch(url);
 
     if (!response.ok) {
-      throw new Error(
-        `SmartRecruiters request failed for ${company.name}: ${response.status} ${response.statusText}`,
+      throw new AdapterHttpError(
+        "SmartRecruiters",
+        company.name,
+        response.status,
+        response.statusText,
       );
     }
 

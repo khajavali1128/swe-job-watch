@@ -1,5 +1,6 @@
 import type { CompanyConfig } from "../config/index.js";
 import type { JobDetails, JobSummary } from "../types.js";
+import { AdapterHttpError } from "./errors.js";
 import type { JobAdapter } from "./types.js";
 
 interface GreenhouseLocation {
@@ -42,8 +43,11 @@ export class GreenhouseAdapter implements JobAdapter {
     const response = await fetch(url);
 
     if (!response.ok) {
-      throw new Error(
-        `Greenhouse request failed for ${company.name}: ${response.status} ${response.statusText}`,
+      throw new AdapterHttpError(
+        "Greenhouse",
+        company.name,
+        response.status,
+        response.statusText,
       );
     }
 
@@ -72,8 +76,11 @@ export class GreenhouseAdapter implements JobAdapter {
     const response = await fetch(url);
 
     if (!response.ok) {
-      throw new Error(
-        `Greenhouse request failed for ${company.name}: ${response.status} ${response.statusText}`,
+      throw new AdapterHttpError(
+        "Greenhouse",
+        company.name,
+        response.status,
+        response.statusText,
       );
     }
 

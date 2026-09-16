@@ -1,5 +1,6 @@
 import type { CompanyConfig } from "../config/index.js";
 import type { JobDetails, JobSummary } from "../types.js";
+import { AdapterHttpError } from "./errors.js";
 import type { JobAdapter } from "./types.js";
 
 interface LeverCategories {
@@ -32,8 +33,11 @@ export class LeverAdapter implements JobAdapter {
     });
 
     if (!response.ok) {
-      throw new Error(
-        `Lever request failed for ${company.name}: ${response.status} ${response.statusText}`,
+      throw new AdapterHttpError(
+        "Lever",
+        company.name,
+        response.status,
+        response.statusText,
       );
     }
 
@@ -64,8 +68,11 @@ export class LeverAdapter implements JobAdapter {
     });
 
     if (!response.ok) {
-      throw new Error(
-        `Lever request failed for ${company.name}: ${response.status} ${response.statusText}`,
+      throw new AdapterHttpError(
+        "Lever",
+        company.name,
+        response.status,
+        response.statusText,
       );
     }
 

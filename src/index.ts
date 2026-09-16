@@ -2,6 +2,7 @@ import { GreenhouseAdapter } from "./adapters/greenhouse.js";
 import { AshbyAdapter } from "./adapters/ashby.js";
 import { LeverAdapter } from "./adapters/lever.js";
 import { SmartRecruitersAdapter } from "./adapters/smartrecruiters.js";
+import { isUnavailableSourceError } from "./adapters/errors.js";
 import type { JobAdapter } from "./adapters/types.js";
 import { validateJob } from "./ai/job-validator.js";
 import { loadConfig, type CompanyConfig } from "./config/index.js";
@@ -21,6 +22,7 @@ interface RunTotals {
   previouslyProcessed: number;
   qualified: number;
   rejected: number;
+  unavailableSources: number;
   failed: number;
 }
 
@@ -46,6 +48,7 @@ async function main(): Promise<void> {
     previouslyProcessed: 0,
     qualified: 0,
     rejected: 0,
+    unavailableSources: 0,
     failed: 0,
   };
 
@@ -107,8 +110,15 @@ async function main(): Promise<void> {
         }
       }
     } catch (error) {
-      totals.failed += 1;
-      console.error(`[${company.name}] Failed: ${errorMessage(error)}`);
+      if (isUnavailableSourceError(error)) {
+        totals.unavailableSources += 1;
+        console.warn(
+          `[${company.name}] Source unavailable (${error.status}); skipping: ${error.message}`,
+        );
+      } else {
+        totals.failed += 1;
+        console.error(`[${company.name}] Failed: ${errorMessage(error)}`);
+      }
     }
   }
 

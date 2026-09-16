@@ -1,5 +1,6 @@
 import type { CompanyConfig } from "../config/index.js";
 import type { JobDetails, JobSummary } from "../types.js";
+import { AdapterHttpError } from "./errors.js";
 import type { JobAdapter } from "./types.js";
 
 interface AshbySecondaryLocation {
@@ -72,8 +73,11 @@ export class AshbyAdapter implements JobAdapter {
     });
 
     if (!response.ok) {
-      throw new Error(
-        `Ashby request failed for ${company.name}: ${response.status} ${response.statusText}`,
+      throw new AdapterHttpError(
+        "Ashby",
+        company.name,
+        response.status,
+        response.statusText,
       );
     }
 

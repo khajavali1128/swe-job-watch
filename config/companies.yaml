@@ -381,7 +381,7 @@ companies:
   handle: andurilindustries
 - id: postman
   name: Postman
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: postman
 - id: xai

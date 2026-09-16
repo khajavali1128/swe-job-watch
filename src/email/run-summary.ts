@@ -10,6 +10,7 @@ export interface RunSummary {
   appended: number;
   duplicates: number;
   processedRecorded: number;
+  unavailableSources: number;
   failed: number;
 }
 
@@ -29,7 +30,12 @@ export async function sendRunSummaryEmail(
     service: "gmail",
     auth: { user, pass: password },
   });
-  const status = summary.failed > 0 ? "Completed with errors" : "Completed";
+  const status =
+    summary.failed > 0
+      ? "Completed with errors"
+      : summary.unavailableSources > 0
+        ? "Completed with unavailable sources"
+        : "Completed";
   const lines = [
     `Status: ${status}`,
     `Companies checked: ${summary.companies}`,
@@ -41,6 +47,7 @@ export async function sendRunSummaryEmail(
     `Added to sheet: ${summary.appended}`,
     `Duplicates skipped: ${summary.duplicates}`,
     `Processed decisions recorded: ${summary.processedRecorded}`,
+    `Unavailable sources skipped: ${summary.unavailableSources}`,
     `Failures: ${summary.failed}`,
   ];
 
