@@ -85,10 +85,8 @@ Only AI-qualified jobs are considered for insertion. Before appending, the servi
 Rows use this layout:
 
 ```text
-S.No | Company | Job URL | Title
+Company | Job URL | Title
 ```
-
-`S.No` continues from the highest existing numeric value.
 
 Each run groups new rows beneath the next Pacific calendar day's heading. For example, a run on September 13 uses `SEPT 14 2026`. The service reuses that heading when it already exists; otherwise, it appends the heading once before the new jobs.
 

@@ -96,11 +96,11 @@ describe("GoogleSheetsJobStore", () => {
   it("adds a next-day heading before jobs when the heading is missing", async () => {
     valuesGet
       .mockResolvedValueOnce({
-        data: { values: [["S.No", "Company", "Job URL", "Title"]] },
+        data: { values: [["Company", "Job URL", "Title"]] },
       })
       .mockResolvedValueOnce({
         data: {
-          values: [["1", "Existing", "https://example.com/jobs/job-1"]],
+          values: [["Existing", "https://example.com/jobs/job-1", "Role"]],
         },
       });
 
@@ -114,9 +114,12 @@ describe("GoogleSheetsJobStore", () => {
       expect.objectContaining({
         requestBody: {
           values: [
-            ["", "", "SEPT 14 2026", ""],
             [
-              2,
+              "",
+              "SEPT 14 2026",
+              "",
+            ],
+            [
               "Example",
               "https://example.com/jobs/job-2",
               "Platform Developer",
@@ -130,13 +133,13 @@ describe("GoogleSheetsJobStore", () => {
   it("reuses an existing next-day heading", async () => {
     valuesGet
       .mockResolvedValueOnce({
-        data: { values: [["S.No", "Company", "Job URL", "Title"]] },
+        data: { values: [["Company", "Job URL", "Title"]] },
       })
       .mockResolvedValueOnce({
         data: {
           values: [
-            ["", "", "SEPT 14 2026"],
-            ["7", "Existing", "https://example.com/jobs/job-1"],
+            ["", "SEPT 14 2026", ""],
+            ["Existing", "https://example.com/jobs/job-1", "Role"],
           ],
         },
       });
@@ -151,7 +154,6 @@ describe("GoogleSheetsJobStore", () => {
         requestBody: {
           values: [
             [
-              8,
               "Example",
               "https://example.com/jobs/job-2",
               "Platform Developer",
@@ -165,13 +167,13 @@ describe("GoogleSheetsJobStore", () => {
   it("does not append a duplicate URL or another date heading", async () => {
     valuesGet
       .mockResolvedValueOnce({
-        data: { values: [["S.No", "Company", "Job URL", "Title"]] },
+        data: { values: [["Company", "Job URL", "Title"]] },
       })
       .mockResolvedValueOnce({
         data: {
           values: [
-            ["", "", "SEPT 14 2026"],
-            ["7", "Example", "https://example.com/jobs/job-2"],
+            ["", "SEPT 14 2026", ""],
+            ["Example", "https://example.com/jobs/job-2", "Platform Developer"],
           ],
         },
       });

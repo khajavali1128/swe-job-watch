@@ -31,7 +31,6 @@ interface GoogleSheetsConfig {
 }
 
 const HEADERS = [
-  "S.No",
   "Company",
   "Job URL",
   "Title",
@@ -105,19 +104,18 @@ export class GoogleSheetsJobStore {
     }
 
     const targetDateHeading = formatNextDayHeading(runAt);
-    const jobRows = newRecords.map(({ job }, index) => [
-      sheetState.highestSerialNumber + index + 1,
+    const jobRows = newRecords.map(({ job }) => [
       job.companyName,
       job.url,
       job.title,
     ]);
     const rows = sheetState.dateHeadings.has(targetDateHeading)
       ? jobRows
-      : [["", "", targetDateHeading, ""], ...jobRows];
+      : [["", targetDateHeading, ""], ...jobRows];
 
     await this.sheets.spreadsheets.values.append({
       spreadsheetId: this.config.spreadsheetId,
-      range: `${sheetName(sheetTab)}!A:D`,
+      range: `${sheetName(sheetTab)}!A:C`,
       valueInputOption: "USER_ENTERED",
       insertDataOption: "INSERT_ROWS",
       requestBody: { values: rows },
@@ -205,7 +203,7 @@ export class GoogleSheetsJobStore {
   }
 
   private async ensureHeaders(): Promise<void> {
-    const range = `${sheetName(await this.resolveSheetTab())}!A1:D1`;
+    const range = `${sheetName(await this.resolveSheetTab())}!A1:C1`;
     const response = await this.sheets.spreadsheets.values.get({
       spreadsheetId: this.config.spreadsheetId,
       range,
@@ -250,7 +248,6 @@ export class GoogleSheetsJobStore {
 
   private async readSheetState(): Promise<{
     existingUrls: Set<string>;
-    highestSerialNumber: number;
     dateHeadings: Set<string>;
   }> {
     const sheetTab = await this.resolveSheetTab();
@@ -263,17 +260,11 @@ export class GoogleSheetsJobStore {
     return {
       existingUrls: new Set(
         rows
-          .map((row) => row[2])
+          .map((row) => row[1])
           .filter((value): value is string =>
             typeof value === "string" && /^https?:\/\//i.test(value)
           ),
       ),
-      highestSerialNumber: rows.reduce((highest, row) => {
-        const serialNumber = Number(row[0]);
-        return Number.isInteger(serialNumber)
-          ? Math.max(highest, serialNumber)
-          : highest;
-      }, 0),
       dateHeadings: new Set(
         rows
           .flatMap((row) => row)
