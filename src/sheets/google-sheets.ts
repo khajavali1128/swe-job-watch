@@ -34,6 +34,7 @@ const HEADERS = [
   "Company",
   "Job URL",
   "Title",
+  "Posted At",
 ];
 const PROCESSED_JOBS_TAB = "Processed Jobs";
 const PROCESSED_JOBS_HEADERS = [
@@ -108,14 +109,15 @@ export class GoogleSheetsJobStore {
       job.companyName,
       job.url,
       job.title,
+      job.postedAt?.toISOString() ?? "",
     ]);
     const rows = sheetState.dateHeadings.has(targetDateHeading)
       ? jobRows
-      : [["", targetDateHeading, ""], ...jobRows];
+      : [["", targetDateHeading, "", ""], ...jobRows];
 
     await this.sheets.spreadsheets.values.append({
       spreadsheetId: this.config.spreadsheetId,
-      range: `${sheetName(sheetTab)}!A:C`,
+      range: `${sheetName(sheetTab)}!A:D`,
       valueInputOption: "USER_ENTERED",
       insertDataOption: "INSERT_ROWS",
       requestBody: { values: rows },
@@ -203,13 +205,17 @@ export class GoogleSheetsJobStore {
   }
 
   private async ensureHeaders(): Promise<void> {
-    const range = `${sheetName(await this.resolveSheetTab())}!A1:C1`;
+    const range = `${sheetName(await this.resolveSheetTab())}!A1:D1`;
     const response = await this.sheets.spreadsheets.values.get({
       spreadsheetId: this.config.spreadsheetId,
       range,
     });
+    const currentHeaders = response.data.values?.[0] ?? [];
 
-    if ((response.data.values?.[0]?.length ?? 0) > 0) {
+    if (
+      currentHeaders.length === HEADERS.length &&
+      HEADERS.every((header, index) => currentHeaders[index] === header)
+    ) {
       return;
     }
 

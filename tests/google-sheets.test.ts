@@ -96,7 +96,7 @@ describe("GoogleSheetsJobStore", () => {
   it("adds a next-day heading before jobs when the heading is missing", async () => {
     valuesGet
       .mockResolvedValueOnce({
-        data: { values: [["Company", "Job URL", "Title"]] },
+        data: { values: [["Company", "Job URL", "Title", "Posted At"]] },
       })
       .mockResolvedValueOnce({
         data: {
@@ -118,11 +118,13 @@ describe("GoogleSheetsJobStore", () => {
               "",
               "SEPT 14 2026",
               "",
+              "",
             ],
             [
               "Example",
               "https://example.com/jobs/job-2",
               "Platform Developer",
+              "2026-09-13T18:00:00.000Z",
             ],
           ],
         },
@@ -133,13 +135,13 @@ describe("GoogleSheetsJobStore", () => {
   it("reuses an existing next-day heading", async () => {
     valuesGet
       .mockResolvedValueOnce({
-        data: { values: [["Company", "Job URL", "Title"]] },
+        data: { values: [["Company", "Job URL", "Title", "Posted At"]] },
       })
       .mockResolvedValueOnce({
         data: {
           values: [
-            ["", "SEPT 14 2026", ""],
-            ["Existing", "https://example.com/jobs/job-1", "Role"],
+            ["", "SEPT 14 2026", "", ""],
+            ["Existing", "https://example.com/jobs/job-1", "Role", ""],
           ],
         },
       });
@@ -157,6 +159,7 @@ describe("GoogleSheetsJobStore", () => {
               "Example",
               "https://example.com/jobs/job-2",
               "Platform Developer",
+              "2026-09-13T18:00:00.000Z",
             ],
           ],
         },
@@ -167,13 +170,18 @@ describe("GoogleSheetsJobStore", () => {
   it("does not append a duplicate URL or another date heading", async () => {
     valuesGet
       .mockResolvedValueOnce({
-        data: { values: [["Company", "Job URL", "Title"]] },
+        data: { values: [["Company", "Job URL", "Title", "Posted At"]] },
       })
       .mockResolvedValueOnce({
         data: {
           values: [
-            ["", "SEPT 14 2026", ""],
-            ["Example", "https://example.com/jobs/job-2", "Platform Developer"],
+            ["", "SEPT 14 2026", "", ""],
+            [
+              "Example",
+              "https://example.com/jobs/job-2",
+              "Platform Developer",
+              "2026-09-13T18:00:00.000Z",
+            ],
           ],
         },
       });
@@ -185,6 +193,25 @@ describe("GoogleSheetsJobStore", () => {
 
     expect(result).toEqual({ appended: 0, duplicates: 1 });
     expect(valuesAppend).not.toHaveBeenCalled();
+  });
+
+  it("upgrades an existing three-column header", async () => {
+    valuesGet
+      .mockResolvedValueOnce({
+        data: { values: [["Company", "Job URL", "Title"]] },
+      })
+      .mockResolvedValueOnce({ data: { values: [] } });
+
+    await new GoogleSheetsJobStore().appendQualifiedJobs([]);
+
+    expect(valuesUpdate).toHaveBeenCalledWith({
+      spreadsheetId: "sheet-id",
+      range: "'Jobs'!A1:D1",
+      valueInputOption: "RAW",
+      requestBody: {
+        values: [["Company", "Job URL", "Title", "Posted At"]],
+      },
+    });
   });
 
   it("loads stable keys from an existing processed jobs tab", async () => {

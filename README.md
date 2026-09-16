@@ -85,8 +85,10 @@ Only AI-qualified jobs are considered for insertion. Before appending, the servi
 Rows use this layout:
 
 ```text
-Company | Job URL | Title
+Company | Job URL | Title | Posted At
 ```
+
+`Posted At` is the normalized ATS publication or release timestamp in ISO UTC format. It is blank when the provider does not expose a reliable timestamp.
 
 Each run groups new rows beneath the next Pacific calendar day's heading. For example, a run on September 13 uses `SEPT 14 2026`. The service reuses that heading when it already exists; otherwise, it appends the heading once before the new jobs.
 
@@ -179,7 +181,7 @@ npm run test:workflow -- doordash JOB_ID
 
 ## GitHub Actions
 
-[`job-watch.yml`](.github/workflows/job-watch.yml) runs the production service twice daily at `20:00 UTC` and `02:00 UTC`, which are `12:00 PM PST` and `6:00 PM PST`. During daylight-saving time, the same fixed UTC schedules run at `1:00 PM PDT` and `7:00 PM PDT`. GitHub may start scheduled workflows a few minutes late.
+[`job-watch.yml`](.github/workflows/job-watch.yml) runs the production service every three hours. GitHub may start scheduled workflows a few minutes late.
 
 The workflow can also be run manually from **Actions -> SWE Job Watch -> Run workflow**, or with:
 
