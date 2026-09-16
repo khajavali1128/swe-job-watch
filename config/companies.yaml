@@ -376,7 +376,7 @@ companies:
   handle: snowflake
 - id: anduril
   name: Anduril
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: andurilindustries
 - id: postman
