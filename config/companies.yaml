@@ -534,3 +534,8 @@ companies:
   enabled: true
   adapter: ashby
   handle: clerk
+- id: mixpanel
+  name: Mixpanel
+  enabled: true
+  adapter: greenhouse
+  handle: mixpanel
