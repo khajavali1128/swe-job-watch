@@ -4,7 +4,7 @@ import type {
 } from "../config/index.js";
 import type { JobDetails, JobSummary } from "../types.js";
 import { AdapterHttpError } from "./errors.js";
-import type { JobAdapter } from "./types.js";
+import type { JobAdapter, JobSummaryQuery } from "./types.js";
 
 interface OracleSecondaryLocation {
   Name?: string | null;
@@ -13,6 +13,8 @@ interface OracleSecondaryLocation {
 interface OracleListing {
   Id?: string | number | null;
   Title?: string | null;
+  PostedDate?: string | null;
+  PostingEndDate?: string | null;
   PrimaryLocation?: string | null;
   secondaryLocations?: OracleSecondaryLocation[] | null;
 }
@@ -39,29 +41,29 @@ interface OracleDetailResponse {
 }
 
 const PAGE_SIZE = 200;
-const DETAIL_BATCH_SIZE = 100;
+const POSTING_DATE_QUERY_BUFFER_MS = 24 * 60 * 60 * 1000;
 const LISTING_PATH =
   "/hcmRestApi/resources/latest/recruitingCEJobRequisitions";
 const DETAIL_PATH =
   "/hcmRestApi/resources/latest/recruitingCEJobRequisitionDetails";
+const LISTING_FIELDS =
+  "TotalJobsCount;requisitionList:Id,Title,PostedDate,PostingEndDate,PrimaryLocation,PrimaryLocationCountry;requisitionList.secondaryLocations:Name";
 
 export class OracleAdapter implements JobAdapter {
-  async fetchJobSummaries(company: CompanyConfig): Promise<JobSummary[]> {
+  async fetchJobSummaries(
+    company: CompanyConfig,
+    query?: JobSummaryQuery,
+  ): Promise<JobSummary[]> {
     assertOracleCompany(company);
 
-    const listings = await this.fetchListings(company);
-    const detailMetadata = await this.fetchDetailMetadata(
-      company,
-      listings.map((listing) => String(listing.Id)),
-    );
+    const listings = await this.fetchListings(company, query);
     const now = Date.now();
 
     return listings.flatMap((listing) => {
       assertValidListing(company, listing);
 
       const jobId = String(listing.Id);
-      const metadata = detailMetadata.get(jobId);
-      const closesAt = parseDate(metadata?.ExternalPostedEndDate);
+      const closesAt = parseDateOnlyAtEndOfDay(listing.PostingEndDate);
 
       if (closesAt && closesAt.getTime() <= now) {
         return [];
@@ -75,7 +77,7 @@ export class OracleAdapter implements JobAdapter {
           title: listing.Title!.trim(),
           location: formatLocation(listing),
           url: `${trimTrailingSlash(company.publicJobBaseUrl)}/${encodeURIComponent(jobId)}`,
-          postedAt: parseDate(metadata?.ExternalPostedStartDate),
+          postedAt: parseDateOnlyAtEndOfDay(listing.PostedDate),
           updatedAt: null,
           source: "oracle" as const,
         },
@@ -89,7 +91,7 @@ export class OracleAdapter implements JobAdapter {
   ): Promise<JobDetails> {
     assertOracleCompany(company);
 
-    const details = await this.fetchDetails(company, [job.jobId], true);
+    const details = await this.fetchDetails(company, [job.jobId]);
     const detail = details.find(
       (candidate) => String(candidate.Id) === job.jobId,
     );
@@ -102,6 +104,7 @@ export class OracleAdapter implements JobAdapter {
 
     return {
       ...job,
+      postedAt: parseDate(detail.ExternalPostedStartDate) ?? job.postedAt,
       location: formatLocation(detail) ?? job.location,
       description: joinUniqueSections([
         detail.ExternalDescriptionStr,
@@ -113,6 +116,7 @@ export class OracleAdapter implements JobAdapter {
 
   private async fetchListings(
     company: OracleCompanyConfig,
+    query?: JobSummaryQuery,
   ): Promise<OracleListing[]> {
     const listings: OracleListing[] = [];
     let total = Number.POSITIVE_INFINITY;
@@ -121,10 +125,23 @@ export class OracleAdapter implements JobAdapter {
     while (offset < total) {
       const url = createApiUrl(company, LISTING_PATH);
       url.searchParams.set("onlyData", "true");
-      url.searchParams.set("expand", "requisitionList.secondaryLocations");
+      url.searchParams.set("fields", LISTING_FIELDS);
+      const finderVariables = [
+        `siteNumber=${company.siteNumber}`,
+        `limit=${PAGE_SIZE}`,
+        `offset=${offset}`,
+        "sortBy=POSTING_DATES_DESC",
+      ];
+
+      if (query?.postedAfter) {
+        finderVariables.push(
+          `postingStartDate=${formatPostingStartDate(query.postedAfter)}`,
+        );
+      }
+
       url.searchParams.set(
         "finder",
-        `findReqs;siteNumber=${company.siteNumber},limit=${PAGE_SIZE},offset=${offset},sortBy=POSTING_DATES_DESC`,
+        `findReqs;${finderVariables.join(",")}`,
       );
 
       const data = await fetchJson<OracleListingResponse>(company, url);
@@ -150,30 +167,9 @@ export class OracleAdapter implements JobAdapter {
     return listings;
   }
 
-  private async fetchDetailMetadata(
-    company: OracleCompanyConfig,
-    jobIds: string[],
-  ): Promise<Map<string, OracleJobDetail>> {
-    const detailsById = new Map<string, OracleJobDetail>();
-
-    for (let index = 0; index < jobIds.length; index += DETAIL_BATCH_SIZE) {
-      const batch = jobIds.slice(index, index + DETAIL_BATCH_SIZE);
-      const details = await this.fetchDetails(company, batch, false);
-
-      for (const detail of details) {
-        if (detail.Id !== undefined && detail.Id !== null) {
-          detailsById.set(String(detail.Id), detail);
-        }
-      }
-    }
-
-    return detailsById;
-  }
-
   private async fetchDetails(
     company: OracleCompanyConfig,
     jobIds: string[],
-    includeDescription: boolean,
   ): Promise<OracleJobDetail[]> {
     if (jobIds.length === 0) {
       return [];
@@ -186,15 +182,7 @@ export class OracleAdapter implements JobAdapter {
       `ById;Id=${jobIds.join(" or ")},siteNumber=${company.siteNumber}`,
     );
     url.searchParams.set("limit", String(Math.max(jobIds.length, 1)));
-
-    if (includeDescription) {
-      url.searchParams.set("expand", "secondaryLocations");
-    } else {
-      url.searchParams.set(
-        "fields",
-        "Id,ExternalPostedStartDate,ExternalPostedEndDate",
-      );
-    }
+    url.searchParams.set("expand", "secondaryLocations");
 
     const data = await fetchJson<OracleDetailResponse>(company, url);
 
@@ -301,6 +289,26 @@ function parseDate(value?: string | null): Date | null {
 
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function parseDateOnlyAtEndOfDay(value?: string | null): Date | null {
+  if (!value) {
+    return null;
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return parseDate(`${value}T23:59:59.999Z`);
+  }
+
+  return parseDate(value);
+}
+
+function formatPostingStartDate(postedAfter: Date): string {
+  const bufferedCutoff = new Date(
+    postedAfter.getTime() - POSTING_DATE_QUERY_BUFFER_MS,
+  );
+
+  return bufferedCutoff.toISOString().slice(0, 10);
 }
 
 function trimTrailingSlash(value: string): string {

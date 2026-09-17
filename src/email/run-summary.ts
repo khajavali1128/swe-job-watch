@@ -20,6 +20,7 @@ export async function sendRunSummaryEmail(
   const user = process.env.EMAIL_USER;
   const password = process.env.EMAIL_APP_PASSWORD;
   const recipient = process.env.EMAIL_TO;
+  const runName = process.env.JOB_WATCH_RUN_NAME?.trim();
 
   if (!user || !password || !recipient) {
     console.log("Email summary skipped: email credentials are not configured");
@@ -37,6 +38,7 @@ export async function sendRunSummaryEmail(
         ? "Completed with unavailable sources"
         : "Completed";
   const lines = [
+    ...(runName ? [`Run: ${runName}`] : []),
     `Status: ${status}`,
     `Companies checked: ${summary.companies}`,
     `Jobs scanned: ${summary.summaries}`,
@@ -54,7 +56,7 @@ export async function sendRunSummaryEmail(
   await transporter.sendMail({
     from: user,
     to: recipient,
-    subject: `SWE Job Watch: ${status}`,
+    subject: `SWE Job Watch${runName ? ` (${runName})` : ""}: ${status}`,
     text: lines.join("\n"),
   });
 

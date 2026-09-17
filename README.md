@@ -54,17 +54,17 @@ Provider failures are isolated by company, and AI failures are isolated by job. 
 | Ashby | `publishedAt` | Included in board response and cached | Enabled |
 | Greenhouse | `first_published` | Individual job endpoint | Enabled |
 | SmartRecruiters | `releasedDate` | Individual posting endpoint | Enabled |
-| Oracle Recruiting | `ExternalPostedStartDate` | Individual requisition endpoint | Enabled |
+| Oracle Recruiting | Listing `PostedDate`, confirmed by `ExternalPostedStartDate` | Individual requisition endpoint | Enabled |
 | Workday | Relative `postedOn` label | Individual posting endpoint | Enabled |
 | Lever | Not exposed | Individual posting endpoint | Implemented; companies disabled |
 
-Every adapter produces the shared `JobSummary` and `JobDetails` types. Ashby descriptions are cached from the board response to avoid per-job requests. SmartRecruiters pagination is handled automatically, and its applicant-facing URL is obtained from the detail response before a job reaches the sheet. Oracle publication timestamps are loaded in batches before freshness filtering. Workday exposes relative posting labels rather than exact timestamps, so the adapter interprets them conservatively to avoid missing recent jobs.
+Every adapter produces the shared `JobSummary` and `JobDetails` types. Ashby descriptions are cached from the board response to avoid per-job requests. SmartRecruiters pagination is handled automatically, and its applicant-facing URL is obtained from the detail response before a job reaches the sheet. Oracle requests only a buffered recent listing window, uses listing dates for cheap filtering, and confirms exact timestamps when fetching a surviving job's details. Workday exposes relative posting labels rather than exact timestamps, so the adapter interprets them conservatively to avoid missing recent jobs.
 
 ## Qualification Rules
 
 All editable qualification rules live in [`config/filters.yaml`](config/filters.yaml). The current policy:
 
-- Considers jobs posted within the last 72 hours.
+- Considers jobs posted within the last 24 hours.
 - Accepts U.S. locations, U.S.-remote roles, and multi-location roles containing a U.S. location.
 - Requires a configured software-development title match.
 - Normalizes punctuation and whitespace, so titles such as `Full-Stack Engineer` match configured phrases such as `full stack engineer`.
@@ -93,7 +93,7 @@ Company | Job URL | Title | Posted At
 
 `Posted At` is the normalized ATS publication or release timestamp in ISO UTC format. It is blank when the provider does not expose a reliable timestamp.
 
-Each run groups new rows beneath the next Pacific calendar day's heading. For example, a run on September 13 uses `SEPT 14 2026`. The service reuses that heading when it already exists; otherwise, it appends the heading once before the new jobs.
+Each run appends new qualified jobs directly after the existing rows. It does not add date-heading rows.
 
 The service also maintains a hidden `Processed Jobs` tab. It creates the tab automatically, reads its stable `source:companyId:jobId` keys once at startup, and skips known jobs before fetching descriptions or calling AI. Both qualified and rejected decisions are recorded in a batch after the main-sheet write succeeds. Jobs that fail description fetching or AI validation are not recorded, so a later run can retry them.
 
@@ -126,6 +126,13 @@ Required local environment variables:
 | `GOOGLE_SHEET_ID` | Spreadsheet ID from its URL |
 | `GOOGLE_SHEET_GID` | Numeric target-tab ID; defaults to `0` |
 | `GOOGLE_SERVICE_ACCOUNT_KEY_FILE` | Absolute path to the downloaded service-account JSON |
+
+Optional run-scoping variables:
+
+| Variable | Purpose |
+| --- | --- |
+| `JOB_ADAPTERS` | Comma-separated adapters to run; omitted means all enabled adapters |
+| `JOB_WATCH_RUN_NAME` | Label included in logs and summary-email subjects |
 
 Instead of a JSON file, Google authentication also accepts both `GOOGLE_SERVICE_ACCOUNT_EMAIL` and `GOOGLE_PRIVATE_KEY`.
 
@@ -184,12 +191,20 @@ npm run test:workflow -- doordash JOB_ID
 
 ## GitHub Actions
 
-[`job-watch.yml`](.github/workflows/job-watch.yml) runs the production service every three hours. GitHub may start scheduled workflows a few minutes late.
+Three staggered workflows run every three hours. GitHub schedules use UTC and may start a few minutes late.
 
-The workflow can also be run manually from **Actions -> SWE Job Watch -> Run workflow**, or with:
+| Workflow | Adapters | Schedule |
+| --- | --- | --- |
+| [`job-watch.yml`](.github/workflows/job-watch.yml) | Greenhouse, Lever, SmartRecruiters, Ashby | `:00` every third hour |
+| [`job-watch-oracle.yml`](.github/workflows/job-watch-oracle.yml) | Oracle | `:15` every third hour |
+| [`job-watch-workday.yml`](.github/workflows/job-watch-workday.yml) | Workday | `:30` every third hour |
+
+All three workflows share a concurrency group so only one can access the Google Sheet at a time. Each workflow can also be run manually from its own Actions page, or with:
 
 ```bash
 gh workflow run job-watch.yml
+gh workflow run job-watch-oracle.yml
+gh workflow run job-watch-workday.yml
 gh run watch
 ```
 

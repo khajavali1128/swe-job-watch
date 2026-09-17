@@ -10,6 +10,7 @@ import { validateJob } from "./ai/job-validator.js";
 import { loadConfig, type CompanyConfig } from "./config/index.js";
 import { filterJobSummaries } from "./filters/job-summary-filter.js";
 import { sendRunSummaryEmail } from "./email/run-summary.js";
+import { selectEnabledCompanies } from "./run-scope.js";
 import {
   GoogleSheetsJobStore,
   processedJobKey,
@@ -39,7 +40,8 @@ async function main(): Promise<void> {
   }
 
   const dryRun = process.env.DRY_RUN === "true";
-  const companies = config.companies.filter((company) => company.enabled);
+  const companies = selectEnabledCompanies(config.companies);
+  const runName = process.env.JOB_WATCH_RUN_NAME?.trim() || "all adapters";
   const qualifiedJobs: QualifiedJob[] = [];
   const processedJobs: ProcessedJob[] = [];
   const processedJobKeys = await sheetStore.loadProcessedJobKeys(!dryRun);
@@ -55,7 +57,13 @@ async function main(): Promise<void> {
   };
 
   console.log(
-    `Processing ${companies.length} enabled companies (${processedJobKeys.size} jobs already processed)...`,
+    `Processing ${companies.length} enabled companies for ${runName} (${processedJobKeys.size} jobs already processed)...`,
+  );
+
+  const runStartedAt = new Date();
+  const postedAfter = new Date(
+    runStartedAt.getTime() -
+      config.filters.freshness.lookbackHours * 60 * 60 * 1000,
   );
 
   for (const company of companies) {
@@ -63,8 +71,14 @@ async function main(): Promise<void> {
 
     try {
       const adapter = createAdapter(company);
-      const summaries = await adapter.fetchJobSummaries(company);
-      const candidates = filterJobSummaries(summaries, config.filters);
+      const summaries = await adapter.fetchJobSummaries(company, {
+        postedAfter,
+      });
+      const candidates = filterJobSummaries(
+        summaries,
+        config.filters,
+        runStartedAt,
+      );
       const newCandidates = candidates.filter((candidate) => {
         const key = processedJobKey(candidate);
 
@@ -86,6 +100,19 @@ async function main(): Promise<void> {
       for (const candidate of newCandidates) {
         try {
           const details = await adapter.fetchJobDetails(company, candidate);
+          const isStillEligible = filterJobSummaries(
+            [details],
+            config.filters,
+            runStartedAt,
+          ).length > 0;
+
+          if (!isStillEligible) {
+            console.log(
+              `[${company.name}] SKIPPED after detail verification: ${details.title}`,
+            );
+            continue;
+          }
+
           const validation = await validateJob(
             details,
             config.filters,

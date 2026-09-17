@@ -94,7 +94,7 @@ beforeEach(() => {
 });
 
 describe("GoogleSheetsJobStore", () => {
-  it("adds a next-day heading before jobs when the heading is missing", async () => {
+  it("appends jobs directly after the existing rows", async () => {
     valuesGet
       .mockResolvedValueOnce({
         data: { values: [["Company", "Job URL", "Title", "Posted At"]] },
@@ -105,10 +105,9 @@ describe("GoogleSheetsJobStore", () => {
         },
       });
 
-    const result = await new GoogleSheetsJobStore().appendQualifiedJobs(
-      [qualifiedJob],
-      new Date("2026-09-13T20:00:00-07:00"),
-    );
+    const result = await new GoogleSheetsJobStore().appendQualifiedJobs([
+      qualifiedJob,
+    ]);
 
     expect(result).toEqual({ appended: 1, duplicates: 0 });
     expect(valuesAppend).toHaveBeenCalledWith(
@@ -116,12 +115,6 @@ describe("GoogleSheetsJobStore", () => {
         requestBody: {
           values: [
             [
-              "",
-              "SEPT 14 2026",
-              "",
-              "",
-            ],
-            [
               "Example",
               "https://example.com/jobs/job-2",
               "Platform Developer",
@@ -133,42 +126,7 @@ describe("GoogleSheetsJobStore", () => {
     );
   });
 
-  it("reuses an existing next-day heading", async () => {
-    valuesGet
-      .mockResolvedValueOnce({
-        data: { values: [["Company", "Job URL", "Title", "Posted At"]] },
-      })
-      .mockResolvedValueOnce({
-        data: {
-          values: [
-            ["", "SEPT 14 2026", "", ""],
-            ["Existing", "https://example.com/jobs/job-1", "Role", ""],
-          ],
-        },
-      });
-
-    await new GoogleSheetsJobStore().appendQualifiedJobs(
-      [qualifiedJob],
-      new Date("2026-09-13T20:00:00-07:00"),
-    );
-
-    expect(valuesAppend).toHaveBeenCalledWith(
-      expect.objectContaining({
-        requestBody: {
-          values: [
-            [
-              "Example",
-              "https://example.com/jobs/job-2",
-              "Platform Developer",
-              "2026-09-13T18:00:00.000Z",
-            ],
-          ],
-        },
-      }),
-    );
-  });
-
-  it("does not append a duplicate URL or another date heading", async () => {
+  it("does not append a duplicate URL", async () => {
     valuesGet
       .mockResolvedValueOnce({
         data: { values: [["Company", "Job URL", "Title", "Posted At"]] },
@@ -187,10 +145,9 @@ describe("GoogleSheetsJobStore", () => {
         },
       });
 
-    const result = await new GoogleSheetsJobStore().appendQualifiedJobs(
-      [qualifiedJob],
-      new Date("2026-09-13T20:00:00-07:00"),
-    );
+    const result = await new GoogleSheetsJobStore().appendQualifiedJobs([
+      qualifiedJob,
+    ]);
 
     expect(result).toEqual({ appended: 0, duplicates: 1 });
     expect(valuesAppend).not.toHaveBeenCalled();

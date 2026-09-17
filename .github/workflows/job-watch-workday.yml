@@ -1,8 +1,8 @@
-name: SWE Job Watch - Fast Adapters
+name: SWE Job Watch - Workday
 
 on:
   schedule:
-    - cron: "0 */3 * * *"
+    - cron: "30 */3 * * *"
   workflow_dispatch:
 
 concurrency:
@@ -47,6 +47,6 @@ jobs:
           EMAIL_USER: ${{ secrets.EMAIL_USER }}
           EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD }}
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
-          JOB_ADAPTERS: greenhouse,lever,smartrecruiters,ashby
-          JOB_WATCH_RUN_NAME: Fast adapters
+          JOB_ADAPTERS: workday
+          JOB_WATCH_RUN_NAME: Workday
         run: node dist/index.js
