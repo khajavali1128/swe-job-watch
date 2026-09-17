@@ -1,77 +1,77 @@
 companies:
 - id: stripe
   name: Stripe
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: stripe
 - id: anthropic
   name: Anthropic
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: anthropic
 - id: airbnb
   name: Airbnb
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: airbnb
 - id: doordash
   name: DoorDash
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: doordashusa
 - id: datadog
   name: Datadog
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: datadog
 - id: okta
   name: Okta
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: okta
 - id: twilio
   name: Twilio
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: twilio
 - id: toast
   name: Toast
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: toast
 - id: linkedin
   name: LinkedIn
-  enabled: true
+  enabled: false
   adapter: smartrecruiters
   handle: LinkedIn3
 - id: databricks
   name: Databricks
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: databricks
 - id: cloudflare
   name: Cloudflare
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: cloudflare
 - id: coinbase
   name: Coinbase
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: coinbase
 - id: mongodb
   name: MongoDB
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: mongodb
 - id: robinhood
   name: Robinhood
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: robinhood
 - id: lyft
   name: Lyft
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: lyft
 - id: roblox
@@ -81,42 +81,42 @@ companies:
   handle: roblox
 - id: pinterest
   name: Pinterest
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: pinterestjobadvertisements
 - id: block
   name: Block
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: block
 - id: instacart
   name: Instacart
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: instacart
 - id: elastic
   name: Elastic
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: elastic
 - id: affirm
   name: Affirm
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: affirm
 - id: verkada
   name: Verkada
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: verkada
 - id: gusto
   name: Gusto
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: gusto
 - id: netskope
   name: Netskope
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: netskope
 - id: palantir
@@ -141,237 +141,237 @@ companies:
   handle: zoox
 - id: servicenow
   name: ServiceNow
-  enabled: true
+  enabled: false
   adapter: smartrecruiters
   handle: ServiceNow
 - id: wise
   name: Wise
-  enabled: true
+  enabled: false
   adapter: smartrecruiters
   handle: Wise
 - id: openai
   name: OpenAI
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: openai
 - id: notion
   name: Notion
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: notion
 - id: ramp
   name: Ramp
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: ramp
 - id: vanta
   name: Vanta
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: vanta
 - id: clay
   name: Clay
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: claylabs
 - id: harvey
   name: Harvey
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: harvey
 - id: zapier
   name: Zapier
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: zapier
 - id: perplexity
   name: Perplexity
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: Perplexity
 - id: cognition
   name: Cognition
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: cognition
 - id: sierra
   name: Sierra
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: sierra
 - id: elevenlabs
   name: ElevenLabs
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: ElevenLabs
 - id: replit
   name: Replit
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: replit
 - id: linear
   name: Linear
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: linear
 - id: supabase
   name: Supabase
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: supabase
 - id: baseten
   name: Baseten
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: baseten
 - id: motherduck
   name: MotherDuck
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: motherduck
 - id: pylon
   name: Pylon
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: pylon-labs
 - id: decagon
   name: Decagon
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: decagon
 - id: browserbase
   name: Browserbase
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: Browserbase
 - id: render
   name: Render
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: render
 - id: posthog
   name: PostHog
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: posthog
 - id: temporal
   name: Temporal
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: temporal
 - id: anrok
   name: Anrok
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: anrok
 - id: prime-intellect
   name: Prime Intellect
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: PrimeIntellect
 - id: langfuse
   name: Langfuse
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: langfuse
 - id: abridge
   name: Abridge
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: abridge
 - id: openrouter
   name: OpenRouter
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: openrouter
 - id: lovable
   name: Lovable
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: lovable
 - id: ashby
   name: Ashby
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: ashby
 - id: figma
   name: Figma
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: figma
 - id: reddit
   name: Reddit
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: reddit
 - id: vercel
   name: Vercel
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: vercel
 - id: discord
   name: Discord
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: discord
 - id: chime
   name: Chime
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: chime
 - id: glean
   name: Glean
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: gleanwork
 - id: instabase
   name: Instabase
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: instabase
 - id: grafana-labs
   name: Grafana Labs
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: grafanalabs
 - id: gitlab
   name: GitLab
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: gitlab
 - id: pagerduty
   name: PagerDuty
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: pagerduty
 - id: scale-ai
   name: Scale AI
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: scaleai
 - id: airtable
   name: Airtable
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: airtable
 - id: webflow
   name: Webflow
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: webflow
 - id: new-relic
   name: New Relic
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: newrelic
 - id: sigma-computing
   name: Sigma Computing
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: sigmacomputing
 - id: snowflake
   name: Snowflake
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: snowflake
 - id: anduril
@@ -386,117 +386,117 @@ companies:
   handle: postman
 - id: xai
   name: xAI
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: xai
 - id: anyscale
   name: Anyscale
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: anyscale
 - id: pika
   name: Pika
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: pika
 - id: hex
   name: Hex
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: hex
 - id: benchling
   name: Benchling
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: benchling
 - id: adyen
   name: Adyen
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: adyen
 - id: stytch
   name: Stytch
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: stytch
 - id: plaid
   name: Plaid
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: plaid
 - id: twitch
   name: Twitch
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: twitch
 - id: mercury
   name: Mercury
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: mercury
 - id: sourcegraph
   name: Sourcegraph
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: sourcegraph91
 - id: brex
   name: Brex
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: brex
 - id: cockroach-labs
   name: Cockroach Labs
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: cockroachlabs
 - id: tailscale
   name: Tailscale
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: tailscale
 - id: klaviyo
   name: Klaviyo
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: klaviyo
 - id: fivetran
   name: Fivetran
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: fivetran
 - id: clickhouse
   name: ClickHouse
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: clickhouse
 - id: asana
   name: Asana
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: asana
 - id: dropbox
   name: Dropbox
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: dropbox
 - id: intercom
   name: Intercom
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: intercom
 - id: netlify
   name: Netlify
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: netlify
 - id: hightouch
   name: Hightouch
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: hightouch
 - id: amplitude
   name: Amplitude
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: amplitude
 - id: cursor
@@ -506,37 +506,37 @@ companies:
   handle: cursor
 - id: docker
   name: Docker
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: docker
 - id: cohere
   name: Cohere
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: cohere
 - id: crusoe
   name: Crusoe
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: crusoe
 - id: revenuecat
   name: RevenueCat
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: revenuecat
 - id: neon
   name: Neon
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: neon
 - id: clerk
   name: Clerk
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: clerk
 - id: mixpanel
   name: Mixpanel
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: mixpanel
 - id: goldman-sachs
@@ -549,7 +549,7 @@ companies:
   publicJobBaseUrl: https://hdpc.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/LateralHiring/job
 - id: oracle
   name: Oracle
-  enabled: true
+  enabled: false
   adapter: oracle
   handle: jobsearch
   apiBaseUrl: https://eeho.fa.us2.oraclecloud.com
@@ -557,56 +557,56 @@ companies:
   publicJobBaseUrl: https://careers.oracle.com/en/sites/jobsearch/job
 - id: adobe
   name: Adobe
-  enabled: true
+  enabled: false
   adapter: workday
   handle: external_experienced
   apiBaseUrl: https://adobe.wd5.myworkdayjobs.com
   tenant: adobe
 - id: nvidia
   name: NVIDIA
-  enabled: true
+  enabled: false
   adapter: workday
   handle: NVIDIAExternalCareerSite
   apiBaseUrl: https://nvidia.wd5.myworkdayjobs.com
   tenant: nvidia
 - id: salesforce
   name: Salesforce
-  enabled: true
+  enabled: false
   adapter: workday
   handle: External_Career_Site
   apiBaseUrl: https://salesforce.wd12.myworkdayjobs.com
   tenant: salesforce
 - id: paypal
   name: PayPal
-  enabled: true
+  enabled: false
   adapter: workday
   handle: jobs
   apiBaseUrl: https://paypal.wd1.myworkdayjobs.com
   tenant: paypal
 - id: crowdstrike
   name: CrowdStrike
-  enabled: true
+  enabled: false
   adapter: workday
   handle: crowdstrikecareers
   apiBaseUrl: https://crowdstrike.wd5.myworkdayjobs.com
   tenant: crowdstrike
 - id: workday
   name: Workday
-  enabled: true
+  enabled: false
   adapter: workday
   handle: Workday
   apiBaseUrl: https://workday.wd5.myworkdayjobs.com
   tenant: workday
 - id: autodesk
   name: Autodesk
-  enabled: true
+  enabled: false
   adapter: workday
   handle: Ext
   apiBaseUrl: https://autodesk.wd1.myworkdayjobs.com
   tenant: autodesk
 - id: jpmorgan-chase
   name: JPMorgan Chase
-  enabled: true
+  enabled: false
   adapter: oracle
   handle: CX_1001
   apiBaseUrl: https://jpmc.fa.oraclecloud.com
@@ -614,7 +614,7 @@ companies:
   publicJobBaseUrl: https://jpmc.fa.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1001/job
 - id: american-express
   name: American Express
-  enabled: true
+  enabled: false
   adapter: oracle
   handle: CX_1
   apiBaseUrl: https://egug.fa.us2.oraclecloud.com
@@ -622,7 +622,7 @@ companies:
   publicJobBaseUrl: https://egug.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/job
 - id: nokia
   name: Nokia
-  enabled: true
+  enabled: false
   adapter: oracle
   handle: CX_1
   apiBaseUrl: https://fa-evmr-saasfaprod1.fa.ocs.oraclecloud.com
