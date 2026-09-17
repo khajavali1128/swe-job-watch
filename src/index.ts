@@ -1,7 +1,9 @@
 import { GreenhouseAdapter } from "./adapters/greenhouse.js";
 import { AshbyAdapter } from "./adapters/ashby.js";
 import { LeverAdapter } from "./adapters/lever.js";
+import { OracleAdapter } from "./adapters/oracle.js";
 import { SmartRecruitersAdapter } from "./adapters/smartrecruiters.js";
+import { WorkdayAdapter } from "./adapters/workday.js";
 import { isUnavailableSourceError } from "./adapters/errors.js";
 import type { JobAdapter } from "./adapters/types.js";
 import { validateJob } from "./ai/job-validator.js";
@@ -173,8 +175,12 @@ function createAdapter(company: CompanyConfig): JobAdapter {
       return new GreenhouseAdapter();
     case "lever":
       return new LeverAdapter();
+    case "oracle":
+      return new OracleAdapter();
     case "smartrecruiters":
       return new SmartRecruitersAdapter();
+    case "workday":
+      return new WorkdayAdapter();
   }
 }
 

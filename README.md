@@ -2,7 +2,7 @@
 
 SWE Job Watch is a scheduled Node.js and TypeScript service that scans public ATS job boards, filters recently opened U.S. software-engineering roles, validates full job descriptions with AI, and appends qualified jobs to Google Sheets.
 
-The production service currently checks 100 enabled companies across Ashby, Greenhouse, and SmartRecruiters. Lever is implemented, but its companies are disabled because Lever's public postings API does not provide a reliable publication timestamp.
+The production service currently checks 103 enabled companies across Ashby, Greenhouse, SmartRecruiters, Oracle Recruiting, and Workday. Lever is implemented, but its companies are disabled because Lever's public postings API does not provide a reliable publication timestamp.
 
 ## Workflow
 
@@ -10,7 +10,7 @@ The production service currently checks 100 enabled companies across Ashby, Gree
 companies.yaml + filters.yaml
             |
             v
-Ashby / Greenhouse / Lever / SmartRecruiters listing APIs
+Ashby / Greenhouse / Lever / SmartRecruiters / Oracle / Workday APIs
             |
             v
 Normalized JobSummary[]
@@ -54,15 +54,17 @@ Provider failures are isolated by company, and AI failures are isolated by job. 
 | Ashby | `publishedAt` | Included in board response and cached | Enabled |
 | Greenhouse | `first_published` | Individual job endpoint | Enabled |
 | SmartRecruiters | `releasedDate` | Individual posting endpoint | Enabled |
+| Oracle Recruiting | `ExternalPostedStartDate` | Individual requisition endpoint | Enabled |
+| Workday | Relative `postedOn` label | Individual posting endpoint | Enabled |
 | Lever | Not exposed | Individual posting endpoint | Implemented; companies disabled |
 
-Every adapter produces the shared `JobSummary` and `JobDetails` types. Ashby descriptions are cached from the board response to avoid per-job requests. SmartRecruiters pagination is handled automatically, and its applicant-facing URL is obtained from the detail response before a job reaches the sheet.
+Every adapter produces the shared `JobSummary` and `JobDetails` types. Ashby descriptions are cached from the board response to avoid per-job requests. SmartRecruiters pagination is handled automatically, and its applicant-facing URL is obtained from the detail response before a job reaches the sheet. Oracle publication timestamps are loaded in batches before freshness filtering. Workday exposes relative posting labels rather than exact timestamps, so the adapter interprets them conservatively to avoid missing recent jobs.
 
 ## Qualification Rules
 
 All editable qualification rules live in [`config/filters.yaml`](config/filters.yaml). The current policy:
 
-- Considers jobs posted within the last 24 hours.
+- Considers jobs posted within the last 72 hours.
 - Accepts U.S. locations, U.S.-remote roles, and multi-location roles containing a U.S. location.
 - Requires a configured software-development title match.
 - Normalizes punctuation and whitespace, so titles such as `Full-Stack Engineer` match configured phrases such as `full stack engineer`.

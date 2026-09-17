@@ -4,4 +4,6 @@ export type {
   CompaniesConfig,
   CompanyConfig,
   FiltersConfig,
+  OracleCompanyConfig,
+  WorkdayCompanyConfig,
 } from "./schema.js";

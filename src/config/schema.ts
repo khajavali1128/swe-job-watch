@@ -2,16 +2,61 @@ import { z } from "zod";
 
 const nonEmptyString = z.string().trim().min(1, "Must not be empty");
 const nonEmptyStringArray = z.array(nonEmptyString);
+const urlString = z.string().trim().url("Must be a valid URL");
 
-export const CompanySchema = z
+const companyBase = {
+  id: nonEmptyString,
+  name: nonEmptyString,
+  enabled: z.boolean(),
+};
+
+const createHandleCompanySchema = (
+  adapter: "greenhouse" | "lever" | "smartrecruiters" | "ashby",
+) =>
+  z
+    .object({
+      ...companyBase,
+      adapter: z.literal(adapter),
+      handle: nonEmptyString,
+    })
+    .strict();
+
+const GreenhouseCompanySchema = createHandleCompanySchema("greenhouse");
+const LeverCompanySchema = createHandleCompanySchema("lever");
+const SmartRecruitersCompanySchema = createHandleCompanySchema(
+  "smartrecruiters",
+);
+const AshbyCompanySchema = createHandleCompanySchema("ashby");
+
+export const OracleCompanySchema = z
   .object({
-    id: nonEmptyString,
-    name: nonEmptyString,
-    enabled: z.boolean(),
-    adapter: z.enum(["greenhouse", "lever", "smartrecruiters", "ashby"]),
+    ...companyBase,
+    adapter: z.literal("oracle"),
     handle: nonEmptyString,
+    apiBaseUrl: urlString,
+    siteNumber: nonEmptyString,
+    publicJobBaseUrl: urlString,
   })
   .strict();
+
+export const WorkdayCompanySchema = z
+  .object({
+    ...companyBase,
+    adapter: z.literal("workday"),
+    handle: nonEmptyString,
+    apiBaseUrl: urlString,
+    tenant: nonEmptyString,
+  })
+  .strict();
+
+export const CompanySchema = z.discriminatedUnion("adapter", [
+  GreenhouseCompanySchema,
+  LeverCompanySchema,
+  SmartRecruitersCompanySchema,
+  AshbyCompanySchema,
+  OracleCompanySchema,
+  WorkdayCompanySchema,
+]);
 
 const CompanyListSchema = z.array(CompanySchema).superRefine((companies, context) => {
   const seenIds = new Set<string>();
@@ -96,6 +141,8 @@ export const AppConfigSchema = z
   .strict();
 
 export type CompanyConfig = z.infer<typeof CompanySchema>;
+export type OracleCompanyConfig = z.infer<typeof OracleCompanySchema>;
+export type WorkdayCompanyConfig = z.infer<typeof WorkdayCompanySchema>;
 export type CompaniesConfig = z.infer<typeof CompaniesConfigSchema>;
 export type FiltersConfig = z.infer<typeof FiltersConfigSchema>;
 export type AppConfig = z.infer<typeof AppConfigSchema>;

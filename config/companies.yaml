@@ -539,3 +539,26 @@ companies:
   enabled: true
   adapter: greenhouse
   handle: mixpanel
+- id: goldman-sachs
+  name: Goldman Sachs
+  enabled: true
+  adapter: oracle
+  handle: LateralHiring
+  apiBaseUrl: https://hdpc.fa.us2.oraclecloud.com
+  siteNumber: CX_3002
+  publicJobBaseUrl: https://higher.gs.com/roles
+- id: oracle
+  name: Oracle
+  enabled: true
+  adapter: oracle
+  handle: jobsearch
+  apiBaseUrl: https://eeho.fa.us2.oraclecloud.com
+  siteNumber: CX_45001
+  publicJobBaseUrl: https://careers.oracle.com/en/sites/jobsearch/job
+- id: adobe
+  name: Adobe
+  enabled: true
+  adapter: workday
+  handle: external_experienced
+  apiBaseUrl: https://adobe.wd5.myworkdayjobs.com
+  tenant: adobe

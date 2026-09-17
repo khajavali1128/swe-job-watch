@@ -2,11 +2,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { AshbyAdapter } from "../src/adapters/ashby.js";
 import { LeverAdapter } from "../src/adapters/lever.js";
+import { OracleAdapter } from "../src/adapters/oracle.js";
 import { SmartRecruitersAdapter } from "../src/adapters/smartrecruiters.js";
+import { WorkdayAdapter } from "../src/adapters/workday.js";
 import type { CompanyConfig } from "../src/config/index.js";
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.useRealTimers();
 });
 
 const leverCompany: CompanyConfig = {
@@ -31,6 +34,27 @@ const ashbyCompany: CompanyConfig = {
   enabled: true,
   adapter: "ashby",
   handle: "replit",
+};
+
+const oracleCompany: CompanyConfig = {
+  id: "goldman-sachs",
+  name: "Goldman Sachs",
+  enabled: true,
+  adapter: "oracle",
+  handle: "LateralHiring",
+  apiBaseUrl: "https://example.oraclecloud.com",
+  siteNumber: "CX_3002",
+  publicJobBaseUrl: "https://example.com/roles",
+};
+
+const workdayCompany: CompanyConfig = {
+  id: "adobe",
+  name: "Adobe",
+  enabled: true,
+  adapter: "workday",
+  handle: "external_experienced",
+  apiBaseUrl: "https://adobe.example.com",
+  tenant: "adobe",
 };
 
 describe("AshbyAdapter", () => {
@@ -199,6 +223,211 @@ describe("LeverAdapter", () => {
 
     await expect(adapter.fetchJobDetails(leverCompany, summary)).resolves
       .toMatchObject({ description: "Full job text" });
+  });
+});
+
+describe("OracleAdapter", () => {
+  it("loads exact posting timestamps in a batch and fetches details", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            items: [
+              {
+                TotalJobsCount: 2,
+                requisitionList: [
+                  {
+                    Id: 179758,
+                    Title: "Software Engineer",
+                    PrimaryLocation: "New York, NY, United States",
+                    secondaryLocations: [{ Name: "Dallas, TX, United States" }],
+                  },
+                  {
+                    Id: 179759,
+                    Title: "Platform Engineer",
+                    PrimaryLocation: "San Francisco, CA, United States",
+                  },
+                ],
+              },
+            ],
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            items: [
+              {
+                Id: 179758,
+                ExternalPostedStartDate: "2026-09-16T10:15:00+00:00",
+                ExternalPostedEndDate: null,
+              },
+              {
+                Id: 179759,
+                ExternalPostedStartDate: "2026-09-15T09:00:00+00:00",
+                ExternalPostedEndDate: null,
+              },
+            ],
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            items: [
+              {
+                Id: 179758,
+                PrimaryLocation: "New York, NY, United States",
+                secondaryLocations: [{ Name: "Dallas, TX, United States" }],
+                ExternalDescriptionStr: "Build financial software.",
+                ExternalResponsibilitiesStr: "Design reliable services.",
+                ExternalQualificationsStr: "Four years required.",
+              },
+            ],
+          }),
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const adapter = new OracleAdapter();
+    const jobs = await adapter.fetchJobSummaries(oracleCompany);
+
+    expect(jobs).toHaveLength(2);
+    expect(jobs[0]).toMatchObject({
+      jobId: "179758",
+      title: "Software Engineer",
+      location:
+        "New York, NY, United States; Dallas, TX, United States",
+      url: "https://example.com/roles/179758",
+      updatedAt: null,
+      source: "oracle",
+    });
+    expect(jobs[0]?.postedAt?.toISOString()).toBe(
+      "2026-09-16T10:15:00.000Z",
+    );
+
+    await expect(
+      adapter.fetchJobDetails(oracleCompany, jobs[0]!),
+    ).resolves.toMatchObject({
+      description:
+        "Build financial software.\n\nDesign reliable services.\n\nFour years required.",
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+});
+
+describe("WorkdayAdapter", () => {
+  it("normalizes relative posting dates and fetches the full description", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-16T18:00:00.000Z"));
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            total: 2,
+            jobPostings: [
+              {
+                title: "Software Development Engineer",
+                externalPath: "/job/San-Jose/Software-Engineer_R162345",
+                locationsText: "San Jose, California, United States",
+                postedOn: "Posted Today",
+                bulletFields: ["R162345"],
+              },
+              {
+                title: "Platform Engineer",
+                externalPath: "/job/Seattle/Platform-Engineer_R162346",
+                locationsText: "Seattle, Washington, United States",
+                postedOn: "Posted Yesterday",
+                bulletFields: ["R162346"],
+              },
+            ],
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            jobPostingInfo: {
+              title: "Software Development Engineer",
+              jobReqId: "R162345",
+              location: "San Jose, California, United States",
+              additionalLocations: ["New York, New York, United States"],
+              externalUrl:
+                "https://adobe.example.com/external_experienced/job/San-Jose/Software-Engineer_R162345",
+              jobDescription: "Build Adobe software products.",
+            },
+          }),
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const adapter = new WorkdayAdapter();
+    const jobs = await adapter.fetchJobSummaries(workdayCompany);
+
+    expect(jobs).toHaveLength(2);
+    expect(jobs[0]).toMatchObject({
+      jobId: "R162345",
+      location: "San Jose, California, United States",
+      url: "https://adobe.example.com/external_experienced/job/San-Jose/Software-Engineer_R162345",
+      source: "workday",
+    });
+    expect(jobs[0]?.postedAt?.toISOString()).toBe(
+      "2026-09-16T18:00:00.000Z",
+    );
+    expect(jobs[1]?.postedAt?.toISOString()).toBe(
+      "2026-09-15T18:00:00.000Z",
+    );
+
+    await expect(
+      adapter.fetchJobDetails(workdayCompany, jobs[0]!),
+    ).resolves.toMatchObject({
+      location:
+        "San Jose, California, United States; New York, New York, United States",
+      description: "Build Adobe software products.",
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps paginating when later pages reset the reported total", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            total: 2,
+            jobPostings: [
+              {
+                title: "Software Engineer",
+                externalPath: "/job/One/Software-Engineer_R1",
+                bulletFields: ["R1"],
+              },
+            ],
+          }),
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            total: 0,
+            jobPostings: [
+              {
+                title: "Platform Engineer",
+                externalPath: "/job/Two/Platform-Engineer_R2",
+                bulletFields: ["R2"],
+              },
+            ],
+          }),
+        ),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const jobs = await new WorkdayAdapter().fetchJobSummaries(workdayCompany);
+
+    expect(jobs.map((job) => job.jobId)).toEqual(["R1", "R2"]);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });
 

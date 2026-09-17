@@ -2,7 +2,9 @@ export type JobSource =
   | "greenhouse"
   | "lever"
   | "smartrecruiters"
-  | "ashby";
+  | "ashby"
+  | "oracle"
+  | "workday";
 
 export interface JobSummary {
   companyId: string;

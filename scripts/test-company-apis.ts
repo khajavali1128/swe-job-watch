@@ -1,7 +1,9 @@
 import { AshbyAdapter } from "../src/adapters/ashby.js";
 import { GreenhouseAdapter } from "../src/adapters/greenhouse.js";
 import { LeverAdapter } from "../src/adapters/lever.js";
+import { OracleAdapter } from "../src/adapters/oracle.js";
 import { SmartRecruitersAdapter } from "../src/adapters/smartrecruiters.js";
+import { WorkdayAdapter } from "../src/adapters/workday.js";
 import type { JobAdapter } from "../src/adapters/types.js";
 import { loadConfig, type CompanyConfig } from "../src/config/index.js";
 import type { JobSummary } from "../src/types.js";
@@ -90,8 +92,12 @@ function createAdapter(company: CompanyConfig): JobAdapter {
       return new GreenhouseAdapter();
     case "lever":
       return new LeverAdapter();
+    case "oracle":
+      return new OracleAdapter();
     case "smartrecruiters":
       return new SmartRecruitersAdapter();
+    case "workday":
+      return new WorkdayAdapter();
   }
 }
 
