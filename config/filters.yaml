@@ -66,6 +66,7 @@ roles:
 
 seniority:
   exclude:
+    - lead
     - staff
     - senior staff
     - principal

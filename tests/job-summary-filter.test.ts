@@ -116,10 +116,23 @@ describe("filterJobSummaries", () => {
     const jobs = [
       makeJob({ jobId: "manager", title: "Software Engineering Manager" }),
       makeJob({ jobId: "staff", title: "Staff Software Engineer" }),
+      makeJob({ jobId: "lead", title: "Lead Software Engineer" }),
+      makeJob({
+        jobId: "senior-lead",
+        title: "Senior Lead Software Engineer",
+      }),
       makeJob({ jobId: "test", title: "Software Test Engineer" }),
     ];
 
     expect(filterJobSummaries(jobs, filters, NOW)).toHaveLength(0);
+  });
+
+  it("does not treat leadership as the lead seniority title", () => {
+    const job = makeJob({
+      title: "Software Engineer, Leadership Experience",
+    });
+
+    expect(filterJobSummaries([job], filters, NOW)).toHaveLength(1);
   });
 
   it("rejects an excluded employment type stated in the title", () => {
