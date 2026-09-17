@@ -475,6 +475,54 @@ describe("WorkdayAdapter", () => {
     expect(jobs.map((job) => job.jobId)).toEqual(["R1", "R2"]);
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
+
+  it("skips malformed listings while preserving valid jobs", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            total: 2,
+            jobPostings: [
+              { bulletFields: ["JR2024291"] },
+              {
+                title: "Software Engineer",
+                externalPath: "/job/One/Software-Engineer_R1",
+                bulletFields: ["R1"],
+              },
+            ],
+          }),
+        ),
+      ),
+    );
+
+    const jobs = await new WorkdayAdapter().fetchJobSummaries(workdayCompany);
+
+    expect(jobs.map((job) => job.jobId)).toEqual(["R1"]);
+    expect(warn).toHaveBeenCalledWith(
+      "[Adobe] Skipped 1 malformed Workday listing(s) missing a title or externalPath: JR2024291",
+    );
+  });
+
+  it("fails when a nonempty listing response has no usable jobs", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        new Response(
+          JSON.stringify({
+            total: 1,
+            jobPostings: [{ bulletFields: ["broken-job"] }],
+          }),
+        ),
+      ),
+    );
+
+    await expect(
+      new WorkdayAdapter().fetchJobSummaries(workdayCompany),
+    ).rejects.toThrow("Workday returned no usable jobs for Adobe");
+  });
 });
 
 describe("SmartRecruitersAdapter", () => {

@@ -16,7 +16,7 @@ interface WorkdayListing {
 
 interface WorkdayListingResponse {
   total?: number | null;
-  jobPostings?: WorkdayListing[] | null;
+  jobPostings?: unknown[] | null;
 }
 
 interface WorkdayJobPostingInfo {
@@ -43,9 +43,14 @@ export class WorkdayAdapter implements JobAdapter {
     assertWorkdayCompany(company);
 
     const listings = await this.fetchListings(company);
+    const summaries: JobSummary[] = [];
+    const malformedJobIds: string[] = [];
 
-    return listings.map((listing) => {
-      assertValidListing(company, listing);
+    for (const listing of listings) {
+      if (!isValidListing(listing)) {
+        malformedJobIds.push(workdayListingIdentifier(listing));
+        continue;
+      }
 
       const externalPath = normalizePath(listing.externalPath);
       const jobId = listing.bulletFields?.find(
@@ -54,7 +59,7 @@ export class WorkdayAdapter implements JobAdapter {
       )?.trim() ?? externalPath;
       this.pathCache.set(cacheKey(company.id, jobId), externalPath);
 
-      return {
+      summaries.push({
         companyId: company.id,
         companyName: company.name,
         jobId,
@@ -64,8 +69,22 @@ export class WorkdayAdapter implements JobAdapter {
         postedAt: parseRelativePostingDate(listing.postedOn),
         updatedAt: null,
         source: "workday",
-      };
-    });
+      });
+    }
+
+    if (malformedJobIds.length > 0) {
+      console.warn(
+        `[${company.name}] Skipped ${malformedJobIds.length} malformed Workday listing(s) missing a title or externalPath: ${formatIdentifiers(malformedJobIds)}`,
+      );
+    }
+
+    if (listings.length > 0 && summaries.length === 0) {
+      throw new Error(
+        `Workday returned no usable jobs for ${company.name}`,
+      );
+    }
+
+    return summaries;
   }
 
   async fetchJobDetails(
@@ -110,8 +129,8 @@ export class WorkdayAdapter implements JobAdapter {
 
   private async fetchListings(
     company: WorkdayCompanyConfig,
-  ): Promise<WorkdayListing[]> {
-    const listings: WorkdayListing[] = [];
+  ): Promise<unknown[]> {
+    const listings: unknown[] = [];
     let total = Number.POSITIVE_INFINITY;
     let offset = 0;
 
@@ -175,18 +194,39 @@ function assertWorkdayCompany(
   }
 }
 
-function assertValidListing(
-  company: WorkdayCompanyConfig,
-  listing: WorkdayListing,
-): asserts listing is WorkdayListing & { title: string; externalPath: string } {
-  if (
-    typeof listing.title !== "string" ||
-    listing.title.trim().length === 0 ||
-    typeof listing.externalPath !== "string" ||
-    listing.externalPath.trim().length === 0
-  ) {
-    throw new Error(`Workday returned a malformed job for ${company.name}`);
+function isValidListing(
+  listing: unknown,
+): listing is WorkdayListing & { title: string; externalPath: string } {
+  if (typeof listing !== "object" || listing === null) {
+    return false;
   }
+
+  const candidate = listing as WorkdayListing;
+  return (
+    typeof candidate.title === "string" &&
+    candidate.title.trim().length > 0 &&
+    typeof candidate.externalPath === "string" &&
+    candidate.externalPath.trim().length > 0
+  );
+}
+
+function workdayListingIdentifier(listing: unknown): string {
+  if (typeof listing !== "object" || listing === null) {
+    return "<unknown>";
+  }
+
+  const candidate = listing as WorkdayListing;
+  return candidate.bulletFields?.find(
+    (field): field is string =>
+      typeof field === "string" && field.trim().length > 0,
+  )?.trim() ?? "<unknown>";
+}
+
+function formatIdentifiers(values: string[]): string {
+  const displayed = values.slice(0, 10).join(", ");
+  return values.length > 10
+    ? `${displayed}, and ${values.length - 10} more`
+    : displayed;
 }
 
 function workdayApiUrl(
