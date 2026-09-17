@@ -604,6 +604,27 @@ companies:
   handle: Ext
   apiBaseUrl: https://autodesk.wd1.myworkdayjobs.com
   tenant: autodesk
+- id: expedia
+  name: Expedia
+  enabled: true
+  adapter: workday
+  handle: search
+  apiBaseUrl: https://expedia.wd108.myworkdayjobs.com
+  tenant: expedia
+- id: snap
+  name: Snap
+  enabled: true
+  adapter: workday
+  handle: snap
+  apiBaseUrl: https://snapchat.wd1.myworkdayjobs.com
+  tenant: snapchat
+- id: blackrock
+  name: BlackRock
+  enabled: true
+  adapter: workday
+  handle: BlackRock_Professional
+  apiBaseUrl: https://blackrock.wd1.myworkdayjobs.com
+  tenant: blackrock
 - id: jpmorgan-chase
   name: JPMorgan Chase
   enabled: true
@@ -628,3 +649,19 @@ companies:
   apiBaseUrl: https://fa-evmr-saasfaprod1.fa.ocs.oraclecloud.com
   siteNumber: CX_1
   publicJobBaseUrl: https://fa-evmr-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_1/job
+- id: fortinet
+  name: Fortinet
+  enabled: true
+  adapter: oracle
+  handle: CX_2001
+  apiBaseUrl: https://edel.fa.us2.oraclecloud.com
+  siteNumber: CX_2001
+  publicJobBaseUrl: https://edel.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_2001/job
+- id: chubb
+  name: Chubb
+  enabled: true
+  adapter: oracle
+  handle: CX_2001
+  apiBaseUrl: https://fa-ewgu-saasfaprod1.fa.ocs.oraclecloud.com
+  siteNumber: CX_2001
+  publicJobBaseUrl: https://fa-ewgu-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_2001/job
