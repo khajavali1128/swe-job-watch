@@ -14,6 +14,7 @@ export const JobValidationResultSchema = z
     excludedDomain: z.boolean(),
     excludedEmploymentType: z.boolean(),
     sponsorshipEligible: z.boolean(),
+    citizenshipRequired: z.boolean(),
     requiredYears: z.number().nonnegative().nullable(),
     experienceStatus: z.enum([
       "WITHIN_LIMIT",
@@ -40,6 +41,7 @@ delete (responseJsonSchema as Record<string, unknown>).$schema;
   "excludedDomain",
   "excludedEmploymentType",
   "sponsorshipEligible",
+  "citizenshipRequired",
   "requiredYears",
   "experienceStatus",
   "decision",
@@ -67,8 +69,9 @@ Rules:
 - Excluded domains: reject only when a configured excluded domain is materially part of the role's actual work, not when a term appears incidentally.
 - Employment type: apply the configured included and excluded employment types.
 - Sponsorship: when rejectNegativeStatements is true, set sponsorshipEligible to false if the description explicitly says sponsorship or immigration support is unavailable. This includes wording such as "no sponsorship," "will not/cannot/unable to sponsor," "must be authorized to work without current or future sponsorship," or no support for visa programs such as H-1B, OPT, or CPT. Positive sponsorship language and descriptions that do not mention sponsorship should set sponsorshipEligible to true. Do not interpret a neutral reference to work authorization as a negative restriction unless it excludes sponsorship or immigration support.
+- Citizenship: set citizenshipRequired to true when the job explicitly requires U.S. citizenship, says the applicant must be a U.S. citizen, or mandates an active U.S. government security clearance or eligibility to obtain and maintain one. When rejectCitizenshipRequirements is true, any such requirement is a hard rejection. Do not set citizenshipRequired merely because the role supports a federal customer, mentions a background check or Public Trust review without a citizenship restriction, or contains equal-employment language about citizenship status.
 - Location: apply the configured U.S. rules. Accept eligible U.S. locations, U.S.-remote roles, and allowed multi-location roles containing a U.S. location. Reject exclusively non-U.S. roles. Do not invent U.S. eligibility.
-- Decision: return REJECTED if roleMatch is false, usEligible is false, any excluded flag is true, sponsorshipEligible is false while rejectNegativeStatements is true, experienceStatus is OVER_LIMIT, or experienceStatus is NOT_SPECIFIED while acceptWhenNotSpecified is false. Return QUALIFIED only when none of those conditions applies.
+- Decision: return REJECTED if roleMatch is false, usEligible is false, any excluded flag is true, sponsorshipEligible is false while rejectNegativeStatements is true, citizenshipRequired is true while rejectCitizenshipRequirements is true, experienceStatus is OVER_LIMIT, or experienceStatus is NOT_SPECIFIED while acceptWhenNotSpecified is false. Return QUALIFIED only when none of those conditions applies.
 - Reasons: provide short, factual reasons for the decision, not an essay.
 
 Qualification configuration:
@@ -87,8 +90,9 @@ Final consistency check after evaluating every field:
 2. If roleMatch is false or usEligible is false, decision MUST be REJECTED.
 3. If any excluded flag is true, decision MUST be REJECTED.
 4. If sponsorshipEligible is false and rejectNegativeStatements is true, decision MUST be REJECTED.
-5. If experienceStatus is NOT_SPECIFIED and acceptWhenNotSpecified is false, decision MUST be REJECTED.
-6. Only if none of rules 1-5 applies may decision be QUALIFIED.
+5. If citizenshipRequired is true and rejectCitizenshipRequirements is true, decision MUST be REJECTED.
+6. If experienceStatus is NOT_SPECIFIED and acceptWhenNotSpecified is false, decision MUST be REJECTED.
+7. Only if none of rules 1-6 applies may decision be QUALIFIED.
 Generate the evidence fields first and decision afterward.`;
 }
 
@@ -221,6 +225,8 @@ function assertLogicalConsistency(
     result.excludedEmploymentType ||
     (filters.sponsorship.rejectNegativeStatements &&
       !result.sponsorshipEligible) ||
+    (filters.sponsorship.rejectCitizenshipRequirements &&
+      result.citizenshipRequired) ||
     result.experienceStatus === "OVER_LIMIT" ||
     (result.experienceStatus === "NOT_SPECIFIED" &&
       !filters.experience.acceptWhenNotSpecified);

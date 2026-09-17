@@ -91,3 +91,4 @@ employmentType:
 
 sponsorship:
   rejectNegativeStatements: true
+  rejectCitizenshipRequirements: true

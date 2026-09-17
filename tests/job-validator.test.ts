@@ -50,6 +50,7 @@ describe("validateJobWithGemini", () => {
         excludedDomain: false,
         excludedEmploymentType: false,
         sponsorshipEligible: true,
+        citizenshipRequired: false,
         requiredYears: 5,
         experienceStatus: "OVER_LIMIT",
         reasons: ["Five years required."],
@@ -71,6 +72,7 @@ describe("validateJobWithGemini", () => {
         excludedDomain: false,
         excludedEmploymentType: false,
         sponsorshipEligible: true,
+        citizenshipRequired: false,
         requiredYears: 5,
         experienceStatus: "OVER_LIMIT",
         reasons: ["Five years required."],
@@ -94,6 +96,7 @@ describe("validateJobWithGemini", () => {
         excludedDomain: false,
         excludedEmploymentType: false,
         sponsorshipEligible: false,
+        citizenshipRequired: false,
         requiredYears: 2,
         experienceStatus: "WITHIN_LIMIT",
         reasons: ["The employer does not provide visa sponsorship."],
@@ -115,6 +118,7 @@ describe("validateJobWithGemini", () => {
         excludedDomain: false,
         excludedEmploymentType: false,
         sponsorshipEligible: false,
+        citizenshipRequired: false,
         requiredYears: 2,
         experienceStatus: "WITHIN_LIMIT",
         reasons: ["The employer does not provide visa sponsorship."],
@@ -124,6 +128,59 @@ describe("validateJobWithGemini", () => {
     await expect(validateJobWithGemini(job, filters)).resolves.toMatchObject({
       decision: "REJECTED",
       sponsorshipEligible: false,
+    });
+  });
+
+  it("rejects a qualified decision when U.S. citizenship is required", async () => {
+    generateContent.mockResolvedValue({
+      text: JSON.stringify({
+        decision: "QUALIFIED",
+        roleMatch: true,
+        usEligible: true,
+        excludedSeniority: false,
+        excludedDomain: false,
+        excludedEmploymentType: false,
+        sponsorshipEligible: true,
+        citizenshipRequired: true,
+        requiredYears: 2,
+        experienceStatus: "WITHIN_LIMIT",
+        reasons: ["The role requires U.S. citizenship."],
+      }),
+    });
+
+    await expect(validateJobWithGemini(job, filters)).rejects.toThrow(
+      "expected REJECTED",
+    );
+
+    expect(generateContent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        contents: expect.stringContaining(
+          "mandates an active U.S. government security clearance",
+        ),
+      }),
+    );
+  });
+
+  it("accepts a rejected result when U.S. citizenship is required", async () => {
+    generateContent.mockResolvedValue({
+      text: JSON.stringify({
+        decision: "REJECTED",
+        roleMatch: true,
+        usEligible: true,
+        excludedSeniority: false,
+        excludedDomain: false,
+        excludedEmploymentType: false,
+        sponsorshipEligible: true,
+        citizenshipRequired: true,
+        requiredYears: 2,
+        experienceStatus: "WITHIN_LIMIT",
+        reasons: ["The role requires U.S. citizenship."],
+      }),
+    });
+
+    await expect(validateJobWithGemini(job, filters)).resolves.toMatchObject({
+      decision: "REJECTED",
+      citizenshipRequired: true,
     });
   });
 });

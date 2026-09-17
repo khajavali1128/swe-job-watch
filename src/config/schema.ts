@@ -128,6 +128,7 @@ export const FiltersConfigSchema = z
     sponsorship: z
       .object({
         rejectNegativeStatements: z.boolean(),
+        rejectCitizenshipRequirements: z.boolean(),
       })
       .strict(),
   })

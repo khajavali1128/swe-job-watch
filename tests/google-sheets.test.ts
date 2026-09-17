@@ -66,6 +66,7 @@ const qualifiedJob: QualifiedJob = {
     excludedDomain: false,
     excludedEmploymentType: false,
     sponsorshipEligible: true,
+    citizenshipRequired: false,
     requiredYears: null,
     experienceStatus: "NOT_SPECIFIED",
     decision: "QUALIFIED",
