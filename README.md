@@ -2,7 +2,7 @@
 
 SWE Job Watch is a scheduled Node.js and TypeScript service that scans public ATS job boards, filters recently opened U.S. software-engineering roles, validates full job descriptions with AI, and appends qualified jobs to Google Sheets.
 
-The production service currently checks 112 enabled companies across Ashby, Greenhouse, SmartRecruiters, Oracle Recruiting, and Workday. Lever is implemented, but its companies are disabled because Lever's public postings API does not provide a reliable publication timestamp.
+The production service currently checks 116 enabled companies across Ashby, Greenhouse, Lever, SmartRecruiters, Oracle Recruiting, and Workday.
 
 ## Workflow
 
@@ -56,9 +56,9 @@ Provider failures are isolated by company, and AI failures are isolated by job. 
 | SmartRecruiters | `releasedDate` | Individual posting endpoint | Enabled |
 | Oracle Recruiting | Listing `PostedDate`, confirmed by `ExternalPostedStartDate` | Individual requisition endpoint | Enabled |
 | Workday | Relative `postedOn` label | Individual posting endpoint | Enabled |
-| Lever | Not exposed | Individual posting endpoint | Implemented; companies disabled |
+| Lever | `createdAt` posting-record timestamp | Individual posting endpoint | Enabled |
 
-Every adapter produces the shared `JobSummary` and `JobDetails` types. Ashby descriptions are cached from the board response to avoid per-job requests. SmartRecruiters pagination is handled automatically, and its applicant-facing URL is obtained from the detail response before a job reaches the sheet. Oracle requests only a buffered recent listing window, uses listing dates for cheap filtering, and confirms exact timestamps when fetching a surviving job's details. Workday exposes relative posting labels rather than exact timestamps, so the adapter interprets them conservatively to avoid missing recent jobs.
+Every adapter produces the shared `JobSummary` and `JobDetails` types. Ashby descriptions are cached from the board response to avoid per-job requests. Lever paginates the public postings API and uses its millisecond `createdAt` value as the freshness timestamp; listings with missing or implausible timestamps are skipped. SmartRecruiters pagination is handled automatically, and its applicant-facing URL is obtained from the detail response before a job reaches the sheet. Oracle requests only a buffered recent listing window, uses listing dates for cheap filtering, and confirms exact timestamps when fetching a surviving job's details. Workday exposes relative posting labels rather than exact timestamps, so the adapter interprets them conservatively to avoid missing recent jobs.
 
 ## Qualification Rules
 
@@ -77,7 +77,7 @@ All editable qualification rules live in [`config/filters.yaml`](config/filters.
 - Rejects jobs whose descriptions explicitly state that visa sponsorship or immigration support is unavailable.
 - Rejects jobs that require U.S. citizenship or mandatory U.S. government security-clearance eligibility.
 
-Missing publication dates follow `freshness.allowFirstSeenFallback`. With the current `true` setting, enabling a Lever company would allow all of its otherwise matching listings through the freshness stage, so Lever remains disabled.
+Missing publication dates generally follow `freshness.allowFirstSeenFallback`. Lever is stricter: it skips a listing when `createdAt` is missing or invalid so an undated posting cannot bypass the rolling freshness window.
 
 Companies and ATS handles live in [`config/companies.yaml`](config/companies.yaml). Set `enabled: false` to stop checking a company without removing it.
 
@@ -88,10 +88,10 @@ Only AI-qualified jobs are considered for insertion. Before appending, the servi
 Rows use this layout:
 
 ```text
-Company | Job URL | Title | Posted At
+Company | Job URL | Title | Posted Date
 ```
 
-`Posted At` is the normalized ATS publication or release timestamp in ISO UTC format. It is blank when the provider does not expose a reliable timestamp.
+`Posted Date` is the normalized ATS publication, release, or posting-record date in `YYYY-MM-DD` format. The service retains the complete timestamp internally for rolling-window filtering.
 
 Each run appends new qualified jobs directly after the existing rows. It does not add date-heading rows.
 

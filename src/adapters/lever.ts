@@ -12,6 +12,7 @@ interface LeverCategories {
 interface LeverPosting {
   id: string;
   text: string;
+  createdAt?: number | string | null;
   categories?: LeverCategories;
   country?: string | null;
   description?: string;
@@ -22,38 +23,38 @@ interface LeverPosting {
 }
 
 const LEVER_BASE_URL = "https://api.lever.co/v0/postings";
+const LEVER_PAGE_SIZE = 100;
+const EARLIEST_PLAUSIBLE_POSTING = Date.UTC(2000, 0, 1);
+const MAX_FUTURE_SKEW_MS = 24 * 60 * 60 * 1000;
 
 export class LeverAdapter implements JobAdapter {
   async fetchJobSummaries(company: CompanyConfig): Promise<JobSummary[]> {
     this.assertLeverCompany(company);
 
-    const url = `${LEVER_BASE_URL}/${encodeURIComponent(company.handle)}?mode=json`;
-    const response = await fetch(url, {
-      headers: { Accept: "application/json" },
+    const postings = await this.fetchAllPostings(company);
+
+    return postings.flatMap((posting) => {
+      const postedAt = parseLeverCreatedAt(posting.createdAt);
+
+      if (!postedAt) {
+        console.warn(
+          `[${company.name}] Skipping Lever job ${posting.id}: missing or invalid createdAt`,
+        );
+        return [];
+      }
+
+      return [{
+        companyId: company.id,
+        companyName: company.name,
+        jobId: String(posting.id),
+        title: posting.text,
+        location: formatLocation(posting),
+        url: posting.hostedUrl ?? posting.applyUrl ?? "",
+        postedAt,
+        updatedAt: null,
+        source: "lever" as const,
+      }];
     });
-
-    if (!response.ok) {
-      throw new AdapterHttpError(
-        "Lever",
-        company.name,
-        response.status,
-        response.statusText,
-      );
-    }
-
-    const postings = (await response.json()) as LeverPosting[];
-
-    return postings.map((posting) => ({
-      companyId: company.id,
-      companyName: company.name,
-      jobId: String(posting.id),
-      title: posting.text,
-      location: formatLocation(posting),
-      url: posting.hostedUrl ?? posting.applyUrl ?? "",
-      postedAt: null,
-      updatedAt: null,
-      source: "lever",
-    }));
   }
 
   async fetchJobDetails(
@@ -91,6 +92,68 @@ export class LeverAdapter implements JobAdapter {
       );
     }
   }
+
+  private async fetchAllPostings(
+    company: CompanyConfig,
+  ): Promise<LeverPosting[]> {
+    const postings: LeverPosting[] = [];
+    let skip = 0;
+
+    while (true) {
+      const url = new URL(
+        `${LEVER_BASE_URL}/${encodeURIComponent(company.handle)}`,
+      );
+      url.searchParams.set("mode", "json");
+      url.searchParams.set("limit", String(LEVER_PAGE_SIZE));
+      url.searchParams.set("skip", String(skip));
+
+      const response = await fetch(url, {
+        headers: { Accept: "application/json" },
+      });
+
+      if (!response.ok) {
+        throw new AdapterHttpError(
+          "Lever",
+          company.name,
+          response.status,
+          response.statusText,
+        );
+      }
+
+      const page = await response.json();
+
+      if (!Array.isArray(page)) {
+        throw new Error(
+          `Lever returned an invalid postings response for ${company.name}`,
+        );
+      }
+
+      postings.push(...(page as LeverPosting[]));
+
+      if (page.length < LEVER_PAGE_SIZE) {
+        return postings;
+      }
+
+      skip += page.length;
+    }
+  }
+}
+
+function parseLeverCreatedAt(
+  value: number | string | null | undefined,
+): Date | null {
+  const timestamp = typeof value === "number" ? value : Number(value);
+
+  if (
+    !Number.isFinite(timestamp) ||
+    timestamp < EARLIEST_PLAUSIBLE_POSTING ||
+    timestamp > Date.now() + MAX_FUTURE_SKEW_MS
+  ) {
+    return null;
+  }
+
+  const date = new Date(timestamp);
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 function formatLocation(posting: LeverPosting): string | null {

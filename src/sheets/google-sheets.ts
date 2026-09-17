@@ -34,7 +34,7 @@ const HEADERS = [
   "Company",
   "Job URL",
   "Title",
-  "Posted At",
+  "Posted Date",
 ];
 const PROCESSED_JOBS_TAB = "Processed Jobs";
 const PROCESSED_JOBS_HEADERS = [
@@ -107,7 +107,7 @@ export class GoogleSheetsJobStore {
       job.companyName,
       job.url,
       job.title,
-      job.postedAt?.toISOString() ?? "",
+      formatPostedDate(job.postedAt),
     ]);
 
     await this.sheets.spreadsheets.values.append({
@@ -380,6 +380,10 @@ function sheetName(value: string): string {
 
 function jobKey(job: JobDetails): string {
   return job.url;
+}
+
+function formatPostedDate(value: Date | null): string {
+  return value?.toISOString().slice(0, 10) ?? "";
 }
 
 export function processedJobKey(

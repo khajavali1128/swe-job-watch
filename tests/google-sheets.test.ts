@@ -97,7 +97,7 @@ describe("GoogleSheetsJobStore", () => {
   it("appends jobs directly after the existing rows", async () => {
     valuesGet
       .mockResolvedValueOnce({
-        data: { values: [["Company", "Job URL", "Title", "Posted At"]] },
+        data: { values: [["Company", "Job URL", "Title", "Posted Date"]] },
       })
       .mockResolvedValueOnce({
         data: {
@@ -118,7 +118,7 @@ describe("GoogleSheetsJobStore", () => {
               "Example",
               "https://example.com/jobs/job-2",
               "Platform Developer",
-              "2026-09-13T18:00:00.000Z",
+              "2026-09-13",
             ],
           ],
         },
@@ -129,7 +129,7 @@ describe("GoogleSheetsJobStore", () => {
   it("does not append a duplicate URL", async () => {
     valuesGet
       .mockResolvedValueOnce({
-        data: { values: [["Company", "Job URL", "Title", "Posted At"]] },
+        data: { values: [["Company", "Job URL", "Title", "Posted Date"]] },
       })
       .mockResolvedValueOnce({
         data: {
@@ -167,7 +167,7 @@ describe("GoogleSheetsJobStore", () => {
       range: "'Jobs'!A1:D1",
       valueInputOption: "RAW",
       requestBody: {
-        values: [["Company", "Job URL", "Title", "Posted At"]],
+        values: [["Company", "Job URL", "Title", "Posted Date"]],
       },
     });
   });

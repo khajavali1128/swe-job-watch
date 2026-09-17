@@ -121,22 +121,22 @@ companies:
   handle: netskope
 - id: palantir
   name: Palantir
-  enabled: false
+  enabled: true
   adapter: lever
   handle: palantir
 - id: shield-ai
   name: Shield AI
-  enabled: false
+  enabled: true
   adapter: lever
   handle: shieldai
 - id: spotify
   name: Spotify
-  enabled: false
+  enabled: true
   adapter: lever
   handle: spotify
 - id: zoox
   name: Zoox
-  enabled: false
+  enabled: true
   adapter: lever
   handle: zoox
 - id: servicenow
