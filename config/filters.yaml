@@ -72,6 +72,7 @@ seniority:
     - distinguished
     - manager
     - director
+    - vice president
 
 experience:
   maxRequiredYears: 4

@@ -172,7 +172,7 @@ function matchesRole(title: string, filters: FiltersConfig): boolean {
     normalizeForMatch(term, filters.roles.caseSensitive);
 
   const includesRole = filters.roles.include.some((term) =>
-    normalizedTitle.includes(normalizeTerm(term)),
+    containsNormalizedPhrase(normalizedTitle, normalizeTerm(term)),
   );
   const hasExcludedTitle = filters.roles.excludeTitles.some((term) =>
     normalizedTitle.includes(normalizeTerm(term)),
@@ -233,5 +233,11 @@ function containsWholeTerm(value: string, term: string): boolean {
   return new RegExp(
     `(?:^|[^a-z])${escapeRegExp(term)}(?=$|[^a-z])`,
     "i",
+  ).test(value);
+}
+
+function containsNormalizedPhrase(value: string, phrase: string): boolean {
+  return new RegExp(
+    `(?:^| )${escapeRegExp(phrase)}(?: |$)`,
   ).test(value);
 }

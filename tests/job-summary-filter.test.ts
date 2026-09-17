@@ -63,6 +63,22 @@ describe("filterJobSummaries", () => {
     expect(filterJobSummaries([job], filters, NOW)).toHaveLength(1);
   });
 
+  it("does not match engineer to engineering as a partial word", () => {
+    const job = makeJob({
+      title: "Site Reliability Engineering - Core Platform",
+    });
+
+    expect(filterJobSummaries([job], filters, NOW)).toHaveLength(0);
+  });
+
+  it("rejects vice president engineering roles", () => {
+    const job = makeJob({
+      title: "Vice President - Site Reliability Engineer",
+    });
+
+    expect(filterJobSummaries([job], filters, NOW)).toHaveLength(0);
+  });
+
   it("rejects a listing outside the freshness window", () => {
     const job = makeJob({
       postedAt: new Date("2026-09-12T11:59:59.000Z"),
