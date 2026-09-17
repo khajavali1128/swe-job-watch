@@ -546,7 +546,7 @@ companies:
   handle: LateralHiring
   apiBaseUrl: https://hdpc.fa.us2.oraclecloud.com
   siteNumber: CX_3002
-  publicJobBaseUrl: https://higher.gs.com/roles
+  publicJobBaseUrl: https://hdpc.fa.us2.oraclecloud.com/hcmUI/CandidateExperience/en/sites/LateralHiring/job
 - id: oracle
   name: Oracle
   enabled: true
