@@ -2,7 +2,7 @@
 
 SWE Job Watch is a scheduled Node.js and TypeScript service that scans public ATS job boards, filters recently opened U.S. software-engineering roles, validates full job descriptions with AI, and appends qualified jobs to Google Sheets.
 
-The production service currently checks 121 enabled companies across Ashby, Greenhouse, Lever, SmartRecruiters, Oracle Recruiting, and Workday.
+The production service currently checks 122 enabled companies across Ashby, Avature, Greenhouse, Lever, SmartRecruiters, Oracle Recruiting, and Workday.
 
 ## Workflow
 
@@ -10,7 +10,7 @@ The production service currently checks 121 enabled companies across Ashby, Gree
 companies.yaml + filters.yaml
             |
             v
-Ashby / Greenhouse / Lever / SmartRecruiters / Oracle / Workday APIs
+Ashby / Avature / Greenhouse / Lever / SmartRecruiters / Oracle / Workday sources
             |
             v
 Normalized JobSummary[]
@@ -52,13 +52,14 @@ Provider failures are isolated by company, and AI failures are isolated by job. 
 | Provider | Listing date | Full description | Status |
 | --- | --- | --- | --- |
 | Ashby | `publishedAt` | Included in board response and cached | Enabled |
+| Avature | Tenant listing `Posted` date | Public job-detail page | Enabled for Synopsys |
 | Greenhouse | `first_published` | Individual job endpoint | Enabled |
 | SmartRecruiters | `releasedDate` | Individual posting endpoint | Enabled |
 | Oracle Recruiting | Listing `PostedDate`, confirmed by `ExternalPostedStartDate` | Individual requisition endpoint | Enabled |
 | Workday | Relative `postedOn` label | Individual posting endpoint | Enabled |
 | Lever | `createdAt` posting-record timestamp | Individual posting endpoint | Enabled |
 
-Every adapter produces the shared `JobSummary` and `JobDetails` types. Ashby descriptions are cached from the board response to avoid per-job requests. Lever paginates the public postings API and uses its millisecond `createdAt` value as the freshness timestamp; listings with missing or implausible timestamps are skipped. SmartRecruiters pagination is handled automatically, and its applicant-facing URL is obtained from the detail response before a job reaches the sheet. Oracle requests only a buffered recent listing window, uses listing dates for cheap filtering, and confirms exact timestamps when fetching a surviving job's details. Workday exposes relative posting labels rather than exact timestamps, so the adapter interprets them conservatively to avoid missing recent jobs.
+Every adapter produces the shared `JobSummary` and `JobDetails` types. Ashby descriptions are cached from the board response to avoid per-job requests. Avature reads public server-rendered career pages, sorts dated listings newest-first, and stops pagination after crossing the freshness cutoff. Lever paginates the public postings API and uses its millisecond `createdAt` value as the freshness timestamp; listings with missing or implausible timestamps are skipped. SmartRecruiters pagination is handled automatically, and its applicant-facing URL is obtained from the detail response before a job reaches the sheet. Oracle requests only a buffered recent listing window, uses listing dates for cheap filtering, and confirms exact timestamps when fetching a surviving job's details. Workday exposes relative posting labels rather than exact timestamps, so the adapter interprets them conservatively to avoid missing recent jobs.
 
 ## Qualification Rules
 
@@ -191,20 +192,22 @@ npm run test:workflow -- doordash JOB_ID
 
 ## GitHub Actions
 
-Three staggered workflows run every three hours. GitHub schedules use UTC and may start a few minutes late.
+Four staggered workflows run every three hours. GitHub schedules use UTC and may start a few minutes late.
 
 | Workflow | Adapters | Schedule |
 | --- | --- | --- |
 | [`job-watch.yml`](.github/workflows/job-watch.yml) | Greenhouse, Lever, SmartRecruiters, Ashby | `:00` every third hour |
 | [`job-watch-oracle.yml`](.github/workflows/job-watch-oracle.yml) | Oracle | `:15` every third hour |
 | [`job-watch-workday.yml`](.github/workflows/job-watch-workday.yml) | Workday | `:30` every third hour |
+| [`job-watch-avature.yml`](.github/workflows/job-watch-avature.yml) | Avature | `:45` every third hour |
 
-All three workflows share a concurrency group so only one can access the Google Sheet at a time. Each workflow can also be run manually from its own Actions page, or with:
+All four workflows share a concurrency group so only one can access the Google Sheet at a time. Each workflow can also be run manually from its own Actions page, or with:
 
 ```bash
 gh workflow run job-watch.yml
 gh workflow run job-watch-oracle.yml
 gh workflow run job-watch-workday.yml
+gh workflow run job-watch-avature.yml
 gh run watch
 ```
 

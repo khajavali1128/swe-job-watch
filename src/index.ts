@@ -1,5 +1,6 @@
 import { GreenhouseAdapter } from "./adapters/greenhouse.js";
 import { AshbyAdapter } from "./adapters/ashby.js";
+import { AvatureAdapter } from "./adapters/avature.js";
 import { LeverAdapter } from "./adapters/lever.js";
 import { OracleAdapter } from "./adapters/oracle.js";
 import { SmartRecruitersAdapter } from "./adapters/smartrecruiters.js";
@@ -198,6 +199,8 @@ function createAdapter(company: CompanyConfig): JobAdapter {
   switch (company.adapter) {
     case "ashby":
       return new AshbyAdapter();
+    case "avature":
+      return new AvatureAdapter();
     case "greenhouse":
       return new GreenhouseAdapter();
     case "lever":

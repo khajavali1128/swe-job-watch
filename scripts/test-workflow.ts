@@ -1,5 +1,6 @@
 import { GreenhouseAdapter } from "../src/adapters/greenhouse.js";
 import { AshbyAdapter } from "../src/adapters/ashby.js";
+import { AvatureAdapter } from "../src/adapters/avature.js";
 import { LeverAdapter } from "../src/adapters/lever.js";
 import { OracleAdapter } from "../src/adapters/oracle.js";
 import { SmartRecruitersAdapter } from "../src/adapters/smartrecruiters.js";
@@ -35,10 +36,16 @@ async function testCompany(
 
   try {
     const adapter = createAdapter(company);
-    const summaries = await adapter.fetchJobSummaries(company);
+    const now = new Date();
+    const postedAfter = new Date(
+      now.getTime() - filters.freshness.lookbackHours * 60 * 60 * 1000,
+    );
+    const summaries = await adapter.fetchJobSummaries(company, {
+      postedAfter,
+    });
     console.log(`[${company.name}] Found ${summaries.length} open jobs`);
 
-    const filteredSummaries = filterJobSummaries(summaries, filters);
+    const filteredSummaries = filterJobSummaries(summaries, filters, now);
     console.log(
       `[${company.name}] ${filteredSummaries.length} jobs survived cheap filters`,
     );
@@ -97,6 +104,8 @@ function createAdapter(company: CompanyConfig): JobAdapter {
   switch (company.adapter) {
     case "ashby":
       return new AshbyAdapter();
+    case "avature":
+      return new AvatureAdapter();
     case "greenhouse":
       return new GreenhouseAdapter();
     case "lever":

@@ -5,6 +5,14 @@ import { selectEnabledCompanies } from "../src/run-scope.js";
 
 const companies: CompanyConfig[] = [
   {
+    id: "avature-company",
+    name: "Avature Company",
+    enabled: true,
+    adapter: "avature",
+    handle: "careers",
+    apiBaseUrl: "https://example.avature.net",
+  },
+  {
     id: "greenhouse-company",
     name: "Greenhouse Company",
     enabled: true,
@@ -35,7 +43,11 @@ const companies: CompanyConfig[] = [
 describe("selectEnabledCompanies", () => {
   it("returns every enabled company when no adapter scope is configured", () => {
     expect(selectEnabledCompanies(companies, undefined).map(({ id }) => id))
-      .toEqual(["greenhouse-company", "oracle-company"]);
+      .toEqual([
+        "avature-company",
+        "greenhouse-company",
+        "oracle-company",
+      ]);
   });
 
   it("selects only enabled companies using requested adapters", () => {
@@ -45,6 +57,8 @@ describe("selectEnabledCompanies", () => {
       ),
     ).toEqual(["greenhouse-company", "oracle-company"]);
     expect(selectEnabledCompanies(companies, "workday")).toEqual([]);
+    expect(selectEnabledCompanies(companies, "avature").map(({ id }) => id))
+      .toEqual(["avature-company"]);
   });
 
   it("rejects unsupported adapter names", () => {

@@ -2,6 +2,7 @@ import type { CompanyConfig } from "./config/index.js";
 
 const SUPPORTED_ADAPTERS = new Set<CompanyConfig["adapter"]>([
   "ashby",
+  "avature",
   "greenhouse",
   "lever",
   "oracle",

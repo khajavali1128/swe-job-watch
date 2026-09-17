@@ -28,6 +28,15 @@ const SmartRecruitersCompanySchema = createHandleCompanySchema(
 );
 const AshbyCompanySchema = createHandleCompanySchema("ashby");
 
+export const AvatureCompanySchema = z
+  .object({
+    ...companyBase,
+    adapter: z.literal("avature"),
+    handle: nonEmptyString,
+    apiBaseUrl: urlString,
+  })
+  .strict();
+
 export const OracleCompanySchema = z
   .object({
     ...companyBase,
@@ -50,6 +59,7 @@ export const WorkdayCompanySchema = z
   .strict();
 
 export const CompanySchema = z.discriminatedUnion("adapter", [
+  AvatureCompanySchema,
   GreenhouseCompanySchema,
   LeverCompanySchema,
   SmartRecruitersCompanySchema,
@@ -142,6 +152,7 @@ export const AppConfigSchema = z
   .strict();
 
 export type CompanyConfig = z.infer<typeof CompanySchema>;
+export type AvatureCompanyConfig = z.infer<typeof AvatureCompanySchema>;
 export type OracleCompanyConfig = z.infer<typeof OracleCompanySchema>;
 export type WorkdayCompanyConfig = z.infer<typeof WorkdayCompanySchema>;
 export type CompaniesConfig = z.infer<typeof CompaniesConfigSchema>;

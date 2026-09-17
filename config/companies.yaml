@@ -665,3 +665,9 @@ companies:
   apiBaseUrl: https://fa-ewgu-saasfaprod1.fa.ocs.oraclecloud.com
   siteNumber: CX_2001
   publicJobBaseUrl: https://fa-ewgu-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_2001/job
+- id: synopsys
+  name: Synopsys
+  enabled: true
+  adapter: avature
+  handle: careers
+  apiBaseUrl: https://synopsys.avature.net
