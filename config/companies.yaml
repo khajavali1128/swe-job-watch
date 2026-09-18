@@ -569,6 +569,11 @@ companies:
   enabled: true
   adapter: greenhouse
   handle: duolingo
+- id: spacex
+  name: SpaceX
+  enabled: true
+  adapter: greenhouse
+  handle: spacex
 - id: match-group
   name: Match Group
   enabled: true
