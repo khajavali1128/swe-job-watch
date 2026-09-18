@@ -426,7 +426,7 @@ companies:
   handle: plaid
 - id: twitch
   name: Twitch
-  enabled: true
+  enabled: false
   adapter: greenhouse
   handle: twitch
 - id: mercury
