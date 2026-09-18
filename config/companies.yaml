@@ -539,6 +539,61 @@ companies:
   enabled: true
   adapter: greenhouse
   handle: mixpanel
+- id: samsara
+  name: Samsara
+  enabled: true
+  adapter: greenhouse
+  handle: samsara
+- id: coreweave
+  name: CoreWeave
+  enabled: true
+  adapter: greenhouse
+  handle: coreweave
+- id: launchdarkly
+  name: LaunchDarkly
+  enabled: true
+  adapter: greenhouse
+  handle: launchdarkly
+- id: braze
+  name: Braze
+  enabled: true
+  adapter: greenhouse
+  handle: braze
+- id: pulumi
+  name: Pulumi
+  enabled: true
+  adapter: greenhouse
+  handle: pulumicorporation
+- id: duolingo
+  name: Duolingo
+  enabled: true
+  adapter: greenhouse
+  handle: duolingo
+- id: match-group
+  name: Match Group
+  enabled: true
+  adapter: lever
+  handle: matchgroup
+- id: modal
+  name: Modal
+  enabled: true
+  adapter: ashby
+  handle: modal
+- id: mercor
+  name: Mercor
+  enabled: true
+  adapter: ashby
+  handle: mercor
+- id: writer
+  name: Writer
+  enabled: true
+  adapter: ashby
+  handle: writer
+- id: lambda
+  name: Lambda
+  enabled: true
+  adapter: ashby
+  handle: lambda
 - id: goldman-sachs
   name: Goldman Sachs
   enabled: true
@@ -625,6 +680,69 @@ companies:
   handle: BlackRock_Professional
   apiBaseUrl: https://blackrock.wd1.myworkdayjobs.com
   tenant: blackrock
+- id: wells-fargo
+  name: Wells Fargo
+  enabled: true
+  adapter: workday
+  handle: WellsFargoJobs
+  apiBaseUrl: https://wf.wd1.myworkdayjobs.com
+  tenant: wf
+- id: capital-one
+  name: Capital One
+  enabled: true
+  adapter: workday
+  handle: Capital_One
+  apiBaseUrl: https://capitalone.wd12.myworkdayjobs.com
+  tenant: capitalone
+- id: visa
+  name: Visa
+  enabled: true
+  adapter: workday
+  handle: Visa
+  apiBaseUrl: https://visa.wd5.myworkdayjobs.com
+  tenant: visa
+- id: mastercard
+  name: Mastercard
+  enabled: true
+  adapter: workday
+  handle: CorporateCareers
+  apiBaseUrl: https://mastercard.wd1.myworkdayjobs.com
+  tenant: mastercard
+- id: disney
+  name: Disney
+  enabled: true
+  adapter: workday
+  handle: disneycareer
+  apiBaseUrl: https://disney.wd5.myworkdayjobs.com
+  tenant: disney
+- id: bank-of-america
+  name: Bank of America
+  enabled: true
+  adapter: workday
+  handle: Lateral-US
+  apiBaseUrl: https://ghr.wd1.myworkdayjobs.com
+  tenant: ghr
+- id: broadcom
+  name: Broadcom
+  enabled: true
+  adapter: workday
+  handle: External_Career
+  apiBaseUrl: https://broadcom.wd1.myworkdayjobs.com
+  tenant: broadcom
+- id: cadence
+  name: Cadence
+  enabled: true
+  adapter: workday
+  handle: External_Careers
+  apiBaseUrl: https://cadence.wd1.myworkdayjobs.com
+  tenant: cadence
+- id: marvell
+  name: Marvell
+  enabled: true
+  adapter: workday
+  handle: MarvellCareers
+  apiBaseUrl: https://marvell.wd1.myworkdayjobs.com
+  tenant: marvell
 - id: jpmorgan-chase
   name: JPMorgan Chase
   enabled: true
