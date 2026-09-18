@@ -95,6 +95,9 @@ beforeEach(() => {
 
 describe("GoogleSheetsJobStore", () => {
   it("appends jobs directly after the existing rows", async () => {
+    valuesAppend.mockResolvedValue({
+      data: { updates: { updatedRange: "'Jobs'!A3:D3" } },
+    });
     valuesGet
       .mockResolvedValueOnce({
         data: { values: [["Company", "Job URL", "Title", "Posted Date"]] },
@@ -124,6 +127,36 @@ describe("GoogleSheetsJobStore", () => {
         },
       }),
     );
+    expect(spreadsheetsBatchUpdate).toHaveBeenCalledWith({
+      spreadsheetId: "sheet-id",
+      requestBody: {
+        requests: [
+          {
+            repeatCell: {
+              range: {
+                sheetId: 0,
+                startRowIndex: 2,
+                endRowIndex: 3,
+                startColumnIndex: 0,
+                endColumnIndex: 4,
+              },
+              cell: {
+                userEnteredFormat: {
+                  backgroundColorStyle: {
+                    rgbColor: {
+                      red: 1,
+                      green: 1,
+                      blue: 1,
+                    },
+                  },
+                },
+              },
+              fields: "userEnteredFormat.backgroundColorStyle",
+            },
+          },
+        ],
+      },
+    });
   });
 
   it("does not append a duplicate URL", async () => {

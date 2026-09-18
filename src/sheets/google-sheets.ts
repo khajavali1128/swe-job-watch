@@ -110,13 +110,16 @@ export class GoogleSheetsJobStore {
       formatPostedDate(job.postedAt),
     ]);
 
-    await this.sheets.spreadsheets.values.append({
+    const appendResponse = await this.sheets.spreadsheets.values.append({
       spreadsheetId: this.config.spreadsheetId,
       range: `${sheetName(sheetTab)}!A:D`,
       valueInputOption: "USER_ENTERED",
       insertDataOption: "INSERT_ROWS",
       requestBody: { values: rows },
     });
+    await this.resetAppendedRowBackground(
+      appendResponse.data.updates?.updatedRange,
+    );
 
     return {
       appended: newRecords.length,
@@ -219,6 +222,50 @@ export class GoogleSheetsJobStore {
       range,
       valueInputOption: "RAW",
       requestBody: { values: [HEADERS] },
+    });
+  }
+
+  private async resetAppendedRowBackground(
+    updatedRange: string | null | undefined,
+  ): Promise<void> {
+    const rowRange = parseUpdatedRowRange(updatedRange);
+
+    if (!rowRange) {
+      console.warn(
+        "Google Sheets did not return the appended row range; inherited background formatting could not be reset",
+      );
+      return;
+    }
+
+    await this.sheets.spreadsheets.batchUpdate({
+      spreadsheetId: this.config.spreadsheetId,
+      requestBody: {
+        requests: [
+          {
+            repeatCell: {
+              range: {
+                sheetId: this.config.sheetGid,
+                startRowIndex: rowRange.startRowIndex,
+                endRowIndex: rowRange.endRowIndex,
+                startColumnIndex: 0,
+                endColumnIndex: HEADERS.length,
+              },
+              cell: {
+                userEnteredFormat: {
+                  backgroundColorStyle: {
+                    rgbColor: {
+                      red: 1,
+                      green: 1,
+                      blue: 1,
+                    },
+                  },
+                },
+              },
+              fields: "userEnteredFormat.backgroundColorStyle",
+            },
+          },
+        ],
+      },
     });
   }
 
@@ -384,6 +431,35 @@ function jobKey(job: JobDetails): string {
 
 function formatPostedDate(value: Date | null): string {
   return value?.toISOString().slice(0, 10) ?? "";
+}
+
+function parseUpdatedRowRange(
+  value: string | null | undefined,
+): { startRowIndex: number; endRowIndex: number } | null {
+  const match = value?.match(
+    /!\$?[A-Z]+\$?(\d+):\$?[A-Z]+\$?(\d+)$/i,
+  );
+
+  if (!match) {
+    return null;
+  }
+
+  const firstRow = Number(match[1]);
+  const lastRow = Number(match[2]);
+
+  if (
+    !Number.isInteger(firstRow) ||
+    !Number.isInteger(lastRow) ||
+    firstRow < 1 ||
+    lastRow < firstRow
+  ) {
+    return null;
+  }
+
+  return {
+    startRowIndex: firstRow - 1,
+    endRowIndex: lastRow,
+  };
 }
 
 export function processedJobKey(

@@ -1,5 +1,7 @@
 export type JobSource =
+  | "apple"
   | "avature"
+  | "eightfold"
   | "greenhouse"
   | "lever"
   | "smartrecruiters"

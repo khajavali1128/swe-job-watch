@@ -1,6 +1,8 @@
+import { AppleAdapter } from "./adapters/apple.js";
 import { GreenhouseAdapter } from "./adapters/greenhouse.js";
 import { AshbyAdapter } from "./adapters/ashby.js";
 import { AvatureAdapter } from "./adapters/avature.js";
+import { EightfoldAdapter } from "./adapters/eightfold.js";
 import { LeverAdapter } from "./adapters/lever.js";
 import { OracleAdapter } from "./adapters/oracle.js";
 import { SmartRecruitersAdapter } from "./adapters/smartrecruiters.js";
@@ -45,6 +47,7 @@ async function main(): Promise<void> {
   const runName = process.env.JOB_WATCH_RUN_NAME?.trim() || "all adapters";
   const qualifiedJobs: QualifiedJob[] = [];
   const processedJobs: ProcessedJob[] = [];
+  const alerts: string[] = [];
   const processedJobKeys = await sheetStore.loadProcessedJobKeys(!dryRun);
   const totals: RunTotals = {
     companies: companies.length,
@@ -134,6 +137,9 @@ async function main(): Promise<void> {
           }
         } catch (error) {
           totals.failed += 1;
+          alerts.push(
+            `${company.name} job ${candidate.jobId} failed: ${errorMessage(error)}`,
+          );
           console.error(
             `[${company.name}] Job ${candidate.jobId} failed: ${errorMessage(error)}`,
           );
@@ -142,11 +148,15 @@ async function main(): Promise<void> {
     } catch (error) {
       if (isUnavailableSourceError(error)) {
         totals.unavailableSources += 1;
+        alerts.push(
+          `${company.name} source unavailable (${error.status}): ${error.message}`,
+        );
         console.warn(
           `[${company.name}] Source unavailable (${error.status}); skipping: ${error.message}`,
         );
       } else {
         totals.failed += 1;
+        alerts.push(`${company.name} source failed: ${errorMessage(error)}`);
         console.error(`[${company.name}] Failed: ${errorMessage(error)}`);
       }
     }
@@ -183,6 +193,7 @@ async function main(): Promise<void> {
       appended,
       duplicates,
       processedRecorded,
+      alerts,
     });
 
     if (emailSent) {
@@ -197,10 +208,14 @@ async function main(): Promise<void> {
 
 function createAdapter(company: CompanyConfig): JobAdapter {
   switch (company.adapter) {
+    case "apple":
+      return new AppleAdapter();
     case "ashby":
       return new AshbyAdapter();
     case "avature":
       return new AvatureAdapter();
+    case "eightfold":
+      return new EightfoldAdapter();
     case "greenhouse":
       return new GreenhouseAdapter();
     case "lever":

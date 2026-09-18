@@ -1,8 +1,10 @@
 import type { CompanyConfig } from "./config/index.js";
 
 const SUPPORTED_ADAPTERS = new Set<CompanyConfig["adapter"]>([
+  "apple",
   "ashby",
   "avature",
+  "eightfold",
   "greenhouse",
   "lever",
   "oracle",

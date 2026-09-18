@@ -794,3 +794,14 @@ companies:
   adapter: avature
   handle: careers
   apiBaseUrl: https://synopsys.avature.net
+- id: netflix
+  name: Netflix
+  enabled: true
+  adapter: eightfold
+  handle: netflix.com
+  apiBaseUrl: https://explore.jobs.netflix.net
+- id: apple
+  name: Apple
+  enabled: true
+  adapter: apple
+  handle: apple

@@ -2,7 +2,8 @@ name: SWE Job Watch - Avature
 
 on:
   schedule:
-    - cron: "45 */3 * * *"
+    - cron: "45 12,18 * * *"
+      timezone: "America/Los_Angeles"
   workflow_dispatch:
 
 concurrency:

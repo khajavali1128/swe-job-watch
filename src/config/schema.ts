@@ -11,7 +11,12 @@ const companyBase = {
 };
 
 const createHandleCompanySchema = (
-  adapter: "greenhouse" | "lever" | "smartrecruiters" | "ashby",
+  adapter:
+    | "apple"
+    | "greenhouse"
+    | "lever"
+    | "smartrecruiters"
+    | "ashby",
 ) =>
   z
     .object({
@@ -27,11 +32,21 @@ const SmartRecruitersCompanySchema = createHandleCompanySchema(
   "smartrecruiters",
 );
 const AshbyCompanySchema = createHandleCompanySchema("ashby");
+export const AppleCompanySchema = createHandleCompanySchema("apple");
 
 export const AvatureCompanySchema = z
   .object({
     ...companyBase,
     adapter: z.literal("avature"),
+    handle: nonEmptyString,
+    apiBaseUrl: urlString,
+  })
+  .strict();
+
+export const EightfoldCompanySchema = z
+  .object({
+    ...companyBase,
+    adapter: z.literal("eightfold"),
     handle: nonEmptyString,
     apiBaseUrl: urlString,
   })
@@ -59,7 +74,9 @@ export const WorkdayCompanySchema = z
   .strict();
 
 export const CompanySchema = z.discriminatedUnion("adapter", [
+  AppleCompanySchema,
   AvatureCompanySchema,
+  EightfoldCompanySchema,
   GreenhouseCompanySchema,
   LeverCompanySchema,
   SmartRecruitersCompanySchema,
@@ -152,7 +169,9 @@ export const AppConfigSchema = z
   .strict();
 
 export type CompanyConfig = z.infer<typeof CompanySchema>;
+export type AppleCompanyConfig = z.infer<typeof AppleCompanySchema>;
 export type AvatureCompanyConfig = z.infer<typeof AvatureCompanySchema>;
+export type EightfoldCompanyConfig = z.infer<typeof EightfoldCompanySchema>;
 export type OracleCompanyConfig = z.infer<typeof OracleCompanySchema>;
 export type WorkdayCompanyConfig = z.infer<typeof WorkdayCompanySchema>;
 export type CompaniesConfig = z.infer<typeof CompaniesConfigSchema>;

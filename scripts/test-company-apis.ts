@@ -1,5 +1,7 @@
+import { AppleAdapter } from "../src/adapters/apple.js";
 import { AshbyAdapter } from "../src/adapters/ashby.js";
 import { AvatureAdapter } from "../src/adapters/avature.js";
+import { EightfoldAdapter } from "../src/adapters/eightfold.js";
 import { GreenhouseAdapter } from "../src/adapters/greenhouse.js";
 import { LeverAdapter } from "../src/adapters/lever.js";
 import { OracleAdapter } from "../src/adapters/oracle.js";
@@ -87,10 +89,14 @@ function isUsableSummary(
 
 function createAdapter(company: CompanyConfig): JobAdapter {
   switch (company.adapter) {
+    case "apple":
+      return new AppleAdapter();
     case "ashby":
       return new AshbyAdapter();
     case "avature":
       return new AvatureAdapter();
+    case "eightfold":
+      return new EightfoldAdapter();
     case "greenhouse":
       return new GreenhouseAdapter();
     case "lever":

@@ -12,6 +12,7 @@ export interface RunSummary {
   processedRecorded: number;
   unavailableSources: number;
   failed: number;
+  alerts: string[];
 }
 
 export async function sendRunSummaryEmail(
@@ -37,9 +38,29 @@ export async function sendRunSummaryEmail(
       : summary.unavailableSources > 0
         ? "Completed with unavailable sources"
         : "Completed";
+  const hasAlerts =
+    summary.alerts.length > 0 ||
+    summary.failed > 0 ||
+    summary.unavailableSources > 0;
+  const displayedAlerts = summary.alerts.slice(0, 20);
+  const remainingAlerts = summary.alerts.length - displayedAlerts.length;
+  const alertLines = hasAlerts
+    ? [
+        "",
+        "ALERTS:",
+        ...(displayedAlerts.length > 0
+          ? displayedAlerts.map((alert) => `- ${alert}`)
+          : ["- One or more failures were reported. Check the workflow logs."]),
+        ...(remainingAlerts > 0
+          ? [`- ${remainingAlerts} additional alert(s); check the workflow logs.`]
+          : []),
+        "",
+      ]
+    : [];
   const lines = [
     ...(runName ? [`Run: ${runName}`] : []),
     `Status: ${status}`,
+    ...alertLines,
     `Companies checked: ${summary.companies}`,
     `Jobs scanned: ${summary.summaries}`,
     `Passed cheap filters: ${summary.cheapFilterMatches}`,
@@ -56,7 +77,7 @@ export async function sendRunSummaryEmail(
   await transporter.sendMail({
     from: user,
     to: recipient,
-    subject: `SWE Job Watch${runName ? ` (${runName})` : ""}: ${status}`,
+    subject: `${hasAlerts ? "[ALERT] " : ""}SWE Job Watch${runName ? ` (${runName})` : ""}: ${status}`,
     text: lines.join("\n"),
   });
 

@@ -2,7 +2,7 @@
 
 SWE Job Watch is a scheduled Node.js and TypeScript service that scans public ATS job boards, filters recently opened U.S. software-engineering roles, validates full job descriptions with AI, and appends qualified jobs to Google Sheets.
 
-The production service currently checks 143 enabled companies across Ashby, Avature, Greenhouse, Lever, SmartRecruiters, Oracle Recruiting, and Workday.
+The production service currently checks 145 enabled companies across Apple Careers, Ashby, Avature, Eightfold, Greenhouse, Lever, SmartRecruiters, Oracle Recruiting, and Workday.
 
 ## Workflow
 
@@ -10,7 +10,8 @@ The production service currently checks 143 enabled companies across Ashby, Avat
 companies.yaml + filters.yaml
             |
             v
-Ashby / Avature / Greenhouse / Lever / SmartRecruiters / Oracle / Workday sources
+Apple / Ashby / Avature / Eightfold / Greenhouse / Lever /
+SmartRecruiters / Oracle / Workday sources
             |
             v
 Normalized JobSummary[]
@@ -45,27 +46,29 @@ Qualified and non-duplicate jobs -> main jobs tab
 Gmail run-summary notification
 ```
 
-Provider failures are isolated by company, and AI failures are isolated by job. The service continues processing, sends the final summary when email is configured, and exits unsuccessfully if any failures occurred so GitHub Actions records the run accurately.
+Provider failures are isolated by company, and AI failures are isolated by job. The service continues processing, sends the final summary when email is configured, and exits unsuccessfully if any failures occurred so GitHub Actions records the run accurately. Failure emails begin with `[ALERT]` and identify the affected company or job near the top of the message.
 
 ## ATS Support
 
 | Provider | Listing date | Full description | Status |
 | --- | --- | --- | --- |
+| Apple Careers | Exact `postDateInGMT` | Apple job-detail JSON endpoint | Enabled for Apple |
 | Ashby | `publishedAt` | Included in board response and cached | Enabled |
 | Avature | Tenant listing `Posted` date | Public job-detail page | Enabled for Synopsys |
+| Eightfold | Unix `t_create` timestamp | Individual public career-site endpoint | Enabled for Netflix |
 | Greenhouse | `first_published` | Individual job endpoint | Enabled |
 | SmartRecruiters | `releasedDate` | Individual posting endpoint | Enabled |
 | Oracle Recruiting | Listing `PostedDate`, confirmed by `ExternalPostedStartDate` | Individual requisition endpoint | Enabled |
 | Workday | Relative `postedOn` label | Individual posting endpoint | Enabled |
 | Lever | `createdAt` posting-record timestamp | Individual posting endpoint | Enabled |
 
-Every adapter produces the shared `JobSummary` and `JobDetails` types. Ashby descriptions are cached from the board response to avoid per-job requests. Avature reads public server-rendered career pages, sorts dated listings newest-first, and stops pagination after crossing the freshness cutoff. Lever paginates the public postings API and uses its millisecond `createdAt` value as the freshness timestamp; listings with missing or implausible timestamps are skipped. SmartRecruiters pagination is handled automatically, and its applicant-facing URL is obtained from the detail response before a job reaches the sheet. Oracle requests only a buffered recent listing window, uses listing dates for cheap filtering, and confirms exact timestamps when fetching a surviving job's details. Workday exposes relative posting labels rather than exact timestamps, so the adapter interprets them conservatively to avoid missing recent jobs.
+Every adapter produces the shared `JobSummary` and `JobDetails` types. Apple creates a short-lived CSRF session, requests U.S. postings newest-first, stops after crossing the freshness cutoff, and deduplicates the same position across locations before filtering. Eightfold uses a configurable public career-site host and domain, making the adapter reusable beyond Netflix after each company is verified; date-only posting timestamps remain eligible through the following day so the rolling window does not miss late postings. Ashby descriptions are cached from the board response to avoid per-job requests. Avature reads public server-rendered career pages, sorts dated listings newest-first, and stops pagination after crossing the freshness cutoff. Lever paginates the public postings API and uses its millisecond `createdAt` value as the freshness timestamp; listings with missing or implausible timestamps are skipped. SmartRecruiters pagination is handled automatically, and its applicant-facing URL is obtained from the detail response before a job reaches the sheet. Oracle requests only a buffered recent listing window, uses listing dates for cheap filtering, and confirms exact timestamps when fetching a surviving job's details. Workday exposes relative posting labels rather than exact timestamps, so the adapter interprets them conservatively to avoid missing recent jobs.
 
 ## Qualification Rules
 
 All editable qualification rules live in [`config/filters.yaml`](config/filters.yaml). The current policy:
 
-- Considers jobs posted within the last 3 days.
+- Considers jobs posted within the last 25 hours, providing a one-hour safety buffer around scheduled runs.
 - Accepts U.S. locations, U.S.-remote roles, and multi-location roles containing a U.S. location.
 - Requires a configured software-development title match.
 - Normalizes punctuation and whitespace, so titles such as `Full-Stack Engineer` match configured phrases such as `full stack engineer`.
@@ -192,22 +195,26 @@ npm run test:workflow -- doordash JOB_ID
 
 ## GitHub Actions
 
-Four staggered workflows run every three hours. GitHub schedules use UTC and may start a few minutes late.
+Six staggered workflows run twice daily using Pacific local time. Scheduled runs may start a few minutes late.
 
 | Workflow | Adapters | Schedule |
 | --- | --- | --- |
-| [`job-watch.yml`](.github/workflows/job-watch.yml) | Greenhouse, Lever, SmartRecruiters, Ashby | `:00` every third hour |
-| [`job-watch-oracle.yml`](.github/workflows/job-watch-oracle.yml) | Oracle | `:15` every third hour |
-| [`job-watch-workday.yml`](.github/workflows/job-watch-workday.yml) | Workday | `:30` every third hour |
-| [`job-watch-avature.yml`](.github/workflows/job-watch-avature.yml) | Avature | `:45` every third hour |
+| [`job-watch.yml`](.github/workflows/job-watch.yml) | Greenhouse, Lever, SmartRecruiters, Ashby | 12:00 PM and 6:00 PM Pacific |
+| [`job-watch-oracle.yml`](.github/workflows/job-watch-oracle.yml) | Oracle | 12:15 PM and 6:15 PM Pacific |
+| [`job-watch-workday.yml`](.github/workflows/job-watch-workday.yml) | Workday | 12:30 PM and 6:30 PM Pacific |
+| [`job-watch-avature.yml`](.github/workflows/job-watch-avature.yml) | Avature | 12:45 PM and 6:45 PM Pacific |
+| [`job-watch-eightfold.yml`](.github/workflows/job-watch-eightfold.yml) | Eightfold | 1:00 PM and 7:00 PM Pacific |
+| [`job-watch-custom.yml`](.github/workflows/job-watch-custom.yml) | Apple and future company-specific adapters | 1:15 PM and 7:15 PM Pacific |
 
-All four workflows share a concurrency group so only one can access the Google Sheet at a time. Each workflow can also be run manually from its own Actions page, or with:
+All six workflows share a concurrency group so only one can access the Google Sheet at a time. Each workflow can also be run manually from its own Actions page, or with:
 
 ```bash
 gh workflow run job-watch.yml
 gh workflow run job-watch-oracle.yml
 gh workflow run job-watch-workday.yml
 gh workflow run job-watch-avature.yml
+gh workflow run job-watch-eightfold.yml
+gh workflow run job-watch-custom.yml
 gh run watch
 ```
 
