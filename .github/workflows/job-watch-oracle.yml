@@ -2,8 +2,7 @@ name: SWE Job Watch - Oracle
 
 on:
   schedule:
-    - cron: "15 12,18 * * *"
-      timezone: "America/Los_Angeles"
+    - cron: "15 1,19 * * *"
   workflow_dispatch:
 
 concurrency:
