@@ -276,7 +276,7 @@ companies:
   handle: langfuse
 - id: abridge
   name: Abridge
-  enabled: true
+  enabled: false
   adapter: ashby
   handle: abridge
 - id: openrouter
