@@ -2,7 +2,7 @@ name: SWE Job Watch - Fast Adapters
 
 on:
   schedule:
-    - cron: "0 12,18 * * *"
+    - cron: "0 12,18 * * 1-6"
       timezone: "America/Los_Angeles"
   workflow_dispatch:
 
