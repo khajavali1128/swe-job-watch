@@ -3,6 +3,11 @@ import type { JobDetails, JobSummary } from "../types.js";
 import { AdapterHttpError } from "./errors.js";
 import type { JobAdapter } from "./types.js";
 
+type GreenhouseCompanyConfig = Extract<
+  CompanyConfig,
+  { adapter: "greenhouse" }
+>;
+
 interface GreenhouseLocation {
   name?: string | null;
 }
@@ -92,7 +97,9 @@ export class GreenhouseAdapter implements JobAdapter {
     };
   }
 
-  private assertGreenhouseCompany(company: CompanyConfig): void {
+  private assertGreenhouseCompany(
+    company: CompanyConfig,
+  ): asserts company is GreenhouseCompanyConfig {
     if (company.adapter !== "greenhouse") {
       throw new Error(
         `GreenhouseAdapter cannot handle company ${company.name} with adapter ${company.adapter}`,

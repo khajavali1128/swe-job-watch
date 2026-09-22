@@ -8,6 +8,7 @@ export type JobSource =
   | "smartrecruiters"
   | "ashby"
   | "oracle"
+  | "successfactors"
   | "workday";
 
 export interface JobSummary {

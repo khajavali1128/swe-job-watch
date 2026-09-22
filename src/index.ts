@@ -7,6 +7,7 @@ import { EightfoldAdapter } from "./adapters/eightfold.js";
 import { LeverAdapter } from "./adapters/lever.js";
 import { OracleAdapter } from "./adapters/oracle.js";
 import { SmartRecruitersAdapter } from "./adapters/smartrecruiters.js";
+import { SuccessFactorsAdapter } from "./adapters/successfactors.js";
 import { WorkdayAdapter } from "./adapters/workday.js";
 import { isUnavailableSourceError } from "./adapters/errors.js";
 import type { JobAdapter } from "./adapters/types.js";
@@ -227,6 +228,8 @@ function createAdapter(company: CompanyConfig): JobAdapter {
       return new OracleAdapter();
     case "smartrecruiters":
       return new SmartRecruitersAdapter();
+    case "successfactors":
+      return new SuccessFactorsAdapter();
     case "workday":
       return new WorkdayAdapter();
   }

@@ -3,6 +3,11 @@ import type { JobDetails, JobSummary } from "../types.js";
 import { AdapterHttpError } from "./errors.js";
 import type { JobAdapter } from "./types.js";
 
+type SmartRecruitersCompanyConfig = Extract<
+  CompanyConfig,
+  { adapter: "smartrecruiters" }
+>;
+
 interface SmartRecruitersLocation {
   city?: string | null;
   region?: string | null;
@@ -129,7 +134,9 @@ export class SmartRecruitersAdapter implements JobAdapter {
     };
   }
 
-  private assertSmartRecruitersCompany(company: CompanyConfig): void {
+  private assertSmartRecruitersCompany(
+    company: CompanyConfig,
+  ): asserts company is SmartRecruitersCompanyConfig {
     if (company.adapter !== "smartrecruiters") {
       throw new Error(
         `SmartRecruitersAdapter cannot handle company ${company.name} with adapter ${company.adapter}`,

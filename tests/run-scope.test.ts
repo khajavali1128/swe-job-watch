@@ -55,6 +55,14 @@ const companies: CompanyConfig[] = [
     publicJobBaseUrl: "https://example.oraclecloud.com/jobs",
   },
   {
+    id: "successfactors-company",
+    name: "SuccessFactors Company",
+    enabled: true,
+    adapter: "successfactors",
+    apiBaseUrl: "https://careers.example.com",
+    searchPath: "/jobs/search/",
+  },
+  {
     id: "disabled-workday-company",
     name: "Disabled Workday Company",
     enabled: false,
@@ -75,6 +83,7 @@ describe("selectEnabledCompanies", () => {
         "greenhouse-company",
         "bytedance-company",
         "oracle-company",
+        "successfactors-company",
       ]);
   });
 
@@ -92,6 +101,9 @@ describe("selectEnabledCompanies", () => {
     ).toEqual(["apple-company", "eightfold-company"]);
     expect(selectEnabledCompanies(companies, "bytedance").map(({ id }) => id))
       .toEqual(["bytedance-company"]);
+    expect(
+      selectEnabledCompanies(companies, "successfactors").map(({ id }) => id),
+    ).toEqual(["successfactors-company"]);
   });
 
   it("rejects unsupported adapter names", () => {

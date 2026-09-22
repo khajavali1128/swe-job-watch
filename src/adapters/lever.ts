@@ -3,6 +3,8 @@ import type { JobDetails, JobSummary } from "../types.js";
 import { AdapterHttpError } from "./errors.js";
 import type { JobAdapter } from "./types.js";
 
+type LeverCompanyConfig = Extract<CompanyConfig, { adapter: "lever" }>;
+
 interface LeverCategories {
   location?: string | null;
   allLocations?: string[];
@@ -85,7 +87,9 @@ export class LeverAdapter implements JobAdapter {
     };
   }
 
-  private assertLeverCompany(company: CompanyConfig): void {
+  private assertLeverCompany(
+    company: CompanyConfig,
+  ): asserts company is LeverCompanyConfig {
     if (company.adapter !== "lever") {
       throw new Error(
         `LeverAdapter cannot handle company ${company.name} with adapter ${company.adapter}`,
@@ -94,7 +98,7 @@ export class LeverAdapter implements JobAdapter {
   }
 
   private async fetchAllPostings(
-    company: CompanyConfig,
+    company: LeverCompanyConfig,
   ): Promise<LeverPosting[]> {
     const postings: LeverPosting[] = [];
     let skip = 0;

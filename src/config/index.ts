@@ -9,5 +9,6 @@ export type {
   EightfoldCompanyConfig,
   FiltersConfig,
   OracleCompanyConfig,
+  SuccessFactorsCompanyConfig,
   WorkdayCompanyConfig,
 } from "./schema.js";

@@ -10,14 +10,14 @@ const companyBase = {
   enabled: z.boolean(),
 };
 
-const createHandleCompanySchema = (
-  adapter:
+const createHandleCompanySchema = <
+  Adapter extends
     | "apple"
     | "greenhouse"
     | "lever"
     | "smartrecruiters"
     | "ashby",
-) =>
+>(adapter: Adapter) =>
   z
     .object({
       ...companyBase,
@@ -74,6 +74,18 @@ export const OracleCompanySchema = z
   })
   .strict();
 
+export const SuccessFactorsCompanySchema = z
+  .object({
+    ...companyBase,
+    adapter: z.literal("successfactors"),
+    apiBaseUrl: urlString,
+    searchPath: nonEmptyString.refine(
+      (value) => value.startsWith("/"),
+      "Must start with /",
+    ),
+  })
+  .strict();
+
 export const WorkdayCompanySchema = z
   .object({
     ...companyBase,
@@ -94,6 +106,7 @@ export const CompanySchema = z.discriminatedUnion("adapter", [
   SmartRecruitersCompanySchema,
   AshbyCompanySchema,
   OracleCompanySchema,
+  SuccessFactorsCompanySchema,
   WorkdayCompanySchema,
 ]);
 
@@ -186,6 +199,9 @@ export type ByteDanceCompanyConfig = z.infer<typeof ByteDanceCompanySchema>;
 export type AvatureCompanyConfig = z.infer<typeof AvatureCompanySchema>;
 export type EightfoldCompanyConfig = z.infer<typeof EightfoldCompanySchema>;
 export type OracleCompanyConfig = z.infer<typeof OracleCompanySchema>;
+export type SuccessFactorsCompanyConfig = z.infer<
+  typeof SuccessFactorsCompanySchema
+>;
 export type WorkdayCompanyConfig = z.infer<typeof WorkdayCompanySchema>;
 export type CompaniesConfig = z.infer<typeof CompaniesConfigSchema>;
 export type FiltersConfig = z.infer<typeof FiltersConfigSchema>;

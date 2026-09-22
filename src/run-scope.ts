@@ -10,6 +10,7 @@ const SUPPORTED_ADAPTERS = new Set<CompanyConfig["adapter"]>([
   "lever",
   "oracle",
   "smartrecruiters",
+  "successfactors",
   "workday",
 ]);
 

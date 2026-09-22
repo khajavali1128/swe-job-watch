@@ -48,6 +48,6 @@ jobs:
           EMAIL_USER: ${{ secrets.EMAIL_USER }}
           EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD }}
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
-          JOB_ADAPTERS: greenhouse,lever,smartrecruiters,ashby
+          JOB_ADAPTERS: greenhouse,lever,smartrecruiters,ashby,successfactors
           JOB_WATCH_RUN_NAME: Fast adapters
         run: node dist/index.js

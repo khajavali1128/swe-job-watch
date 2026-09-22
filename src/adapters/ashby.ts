@@ -3,6 +3,8 @@ import type { JobDetails, JobSummary } from "../types.js";
 import { AdapterHttpError } from "./errors.js";
 import type { JobAdapter } from "./types.js";
 
+type AshbyCompanyConfig = Extract<CompanyConfig, { adapter: "ashby" }>;
+
 interface AshbySecondaryLocation {
   location?: string | null;
 }
@@ -66,7 +68,7 @@ export class AshbyAdapter implements JobAdapter {
     };
   }
 
-  private async fetchBoard(company: CompanyConfig): Promise<AshbyJob[]> {
+  private async fetchBoard(company: AshbyCompanyConfig): Promise<AshbyJob[]> {
     const url = `${ASHBY_BASE_URL}/${encodeURIComponent(company.handle)}`;
     const response = await fetch(url, {
       headers: { Accept: "application/json" },
@@ -98,7 +100,7 @@ export class AshbyAdapter implements JobAdapter {
   }
 
   private normalizeSummary(
-    company: CompanyConfig,
+    company: AshbyCompanyConfig,
     job: AshbyJob,
   ): JobSummary {
     return {
@@ -114,7 +116,9 @@ export class AshbyAdapter implements JobAdapter {
     };
   }
 
-  private assertAshbyCompany(company: CompanyConfig): void {
+  private assertAshbyCompany(
+    company: CompanyConfig,
+  ): asserts company is AshbyCompanyConfig {
     if (company.adapter !== "ashby") {
       throw new Error(
         `AshbyAdapter cannot handle company ${company.name} with adapter ${company.adapter}`,

@@ -826,3 +826,9 @@ companies:
   apiBaseUrl: https://jobs.bytedance.com/api/v1/public/supplier
   careerBaseUrl: https://joinbytedance.com/search
   websitePath: en
+- id: ey
+  name: Ernst & Young LLP
+  enabled: true
+  adapter: successfactors
+  apiBaseUrl: https://careers.ey.com
+  searchPath: /ey/search/?optionsFacetsDD_country=US&sortColumn=referencedate&sortDirection=desc
