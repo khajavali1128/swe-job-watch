@@ -294,6 +294,11 @@ companies:
   enabled: true
   adapter: ashby
   handle: ashby
+- id: prelim
+  name: Prelim
+  enabled: true
+  adapter: ashby
+  handle: prelim
 - id: figma
   name: Figma
   enabled: true
@@ -802,7 +807,7 @@ companies:
   apiBaseUrl: https://explore.jobs.netflix.net
 - id: apple
   name: Apple
-  enabled: true
+  enabled: false
   adapter: apple
   handle: apple
 - id: tiktok
@@ -815,7 +820,7 @@ companies:
   websitePath: tiktok
 - id: bytedance
   name: ByteDance
-  enabled: true
+  enabled: false
   adapter: bytedance
   handle: bytedance
   apiBaseUrl: https://jobs.bytedance.com/api/v1/public/supplier

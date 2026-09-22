@@ -82,6 +82,8 @@ const NON_US_MARKERS = [
   "uk",
 ];
 
+const NEW_GRAD_YEAR_PATTERN = /\b(?:2026|2027|2028)\b/;
+
 export function filterJobSummaries(
   jobs: JobSummary[],
   filters: FiltersConfig,
@@ -92,6 +94,7 @@ export function filterJobSummaries(
       matchesFreshness(job, filters, now) &&
       matchesLocation(job, filters) &&
       matchesRole(job.title, filters) &&
+      matchesNewGradYear(job.title) &&
       matchesSeniority(job.title, filters) &&
       matchesEmploymentType(job.title, filters),
   );
@@ -179,6 +182,10 @@ function matchesRole(title: string, filters: FiltersConfig): boolean {
   );
 
   return includesRole && !hasExcludedTitle;
+}
+
+function matchesNewGradYear(title: string): boolean {
+  return !NEW_GRAD_YEAR_PATTERN.test(title);
 }
 
 function matchesSeniority(title: string, filters: FiltersConfig): boolean {

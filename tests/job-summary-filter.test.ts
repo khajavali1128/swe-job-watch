@@ -158,6 +158,34 @@ describe("filterJobSummaries", () => {
     expect(filterJobSummaries(jobs, filters, NOW)).toHaveLength(0);
   });
 
+  it("rejects titles containing configured new-grad cohort years", () => {
+    const jobs = [
+      makeJob({
+        jobId: "2026-cohort",
+        title: "Software Engineer Graduate - 2026 Start",
+      }),
+      makeJob({
+        jobId: "2027-cohort",
+        title: "Software Engineer (2027)",
+      }),
+      makeJob({
+        jobId: "2028-cohort",
+        title: "2028 - Backend Software Engineer",
+      }),
+    ];
+
+    expect(filterJobSummaries(jobs, filters, NOW)).toHaveLength(0);
+  });
+
+  it("does not reject unrelated years or longer numbers", () => {
+    const jobs = [
+      makeJob({ jobId: "2025", title: "Software Engineer - 2025" }),
+      makeJob({ jobId: "long-number", title: "Software Engineer 12027" }),
+    ];
+
+    expect(filterJobSummaries(jobs, filters, NOW)).toHaveLength(2);
+  });
+
   it("allows a missing posted date when first-seen fallback is enabled", () => {
     const job = makeJob({ postedAt: null });
 
