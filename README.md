@@ -2,7 +2,7 @@
 
 SWE Job Watch is a scheduled Node.js and TypeScript service that scans public ATS job boards, filters recently opened U.S. software-engineering roles, validates full job descriptions with AI, and appends qualified jobs to Google Sheets.
 
-The production service currently checks 145 enabled companies across Apple Careers, Ashby, Avature, Eightfold, Greenhouse, Lever, SmartRecruiters, Oracle Recruiting, and Workday.
+The production service currently checks 145 enabled companies across Apple Careers, Ashby, Avature, ByteDance's public supplier API, Eightfold, Greenhouse, Lever, SmartRecruiters, Oracle Recruiting, and Workday.
 
 ## Workflow
 
@@ -10,7 +10,7 @@ The production service currently checks 145 enabled companies across Apple Caree
 companies.yaml + filters.yaml
             |
             v
-Apple / Ashby / Avature / Eightfold / Greenhouse / Lever /
+Apple / Ashby / Avature / ByteDance / Eightfold / Greenhouse / Lever /
 SmartRecruiters / Oracle / Workday sources
             |
             v
@@ -55,6 +55,7 @@ Provider failures are isolated by company, and AI failures are isolated by job. 
 | Apple Careers | Exact `postDateInGMT` | Apple job-detail JSON endpoint | Enabled for Apple |
 | Ashby | `publishedAt` | Included in board response and cached | Enabled |
 | Avature | Tenant listing `Posted` date | Public job-detail page | Enabled for Synopsys |
+| ByteDance public supplier API | Not provided; first-seen fallback | Included in paginated listing response and cached | Enabled for TikTok and ByteDance |
 | Eightfold | Unix `t_create` timestamp | Individual public career-site endpoint | Enabled for Netflix |
 | Greenhouse | `first_published` | Individual job endpoint | Enabled |
 | SmartRecruiters | `releasedDate` | Individual posting endpoint | Enabled |
@@ -62,7 +63,7 @@ Provider failures are isolated by company, and AI failures are isolated by job. 
 | Workday | Relative `postedOn` label | Individual posting endpoint | Enabled |
 | Lever | `createdAt` posting-record timestamp | Individual posting endpoint | Enabled |
 
-Every adapter produces the shared `JobSummary` and `JobDetails` types. Apple creates a short-lived CSRF session, requests U.S. postings newest-first, stops after crossing the freshness cutoff, and deduplicates the same position across locations before filtering. Eightfold uses a configurable public career-site host and domain, making the adapter reusable beyond Netflix after each company is verified; date-only posting timestamps remain eligible through the following day so the rolling window does not miss late postings. Ashby descriptions are cached from the board response to avoid per-job requests. Avature reads public server-rendered career pages, sorts dated listings newest-first, and stops pagination after crossing the freshness cutoff. Lever paginates the public postings API and uses its millisecond `createdAt` value as the freshness timestamp; listings with missing or implausible timestamps are skipped. SmartRecruiters pagination is handled automatically, and its applicant-facing URL is obtained from the detail response before a job reaches the sheet. Oracle requests only a buffered recent listing window, uses listing dates for cheap filtering, and confirms exact timestamps when fetching a surviving job's details. Workday exposes relative posting labels rather than exact timestamps, so the adapter interprets them conservatively to avoid missing recent jobs.
+Every adapter produces the shared `JobSummary` and `JobDetails` types. Apple creates a short-lived CSRF session, requests U.S. postings newest-first, stops after crossing the freshness cutoff, and deduplicates the same position across locations before filtering. The reusable ByteDance adapter paginates the public supplier APIs used by TikTok and ByteDance and caches the descriptions and requirements included in each listing response. Because those APIs provide no publication timestamp, their jobs use first-seen processing and leave the sheet's Posted Date blank. Eightfold uses a configurable public career-site host and domain, making the adapter reusable beyond Netflix after each company is verified; date-only posting timestamps remain eligible through the following day so the rolling window does not miss late postings. Ashby descriptions are cached from the board response to avoid per-job requests. Avature reads public server-rendered career pages, sorts dated listings newest-first, and stops pagination after crossing the freshness cutoff. Lever paginates the public postings API and uses its millisecond `createdAt` value as the freshness timestamp; listings with missing or implausible timestamps are skipped. SmartRecruiters pagination is handled automatically, and its applicant-facing URL is obtained from the detail response before a job reaches the sheet. Oracle requests only a buffered recent listing window, uses listing dates for cheap filtering, and confirms exact timestamps when fetching a surviving job's details. Workday exposes relative posting labels rather than exact timestamps, so the adapter interprets them conservatively to avoid missing recent jobs.
 
 ## Qualification Rules
 
@@ -176,6 +177,9 @@ Audit every configured company's public ATS listing API without running filters,
 
 ```bash
 npm run test:companies
+
+# One configured company
+npm run test:companies -- tiktok
 ```
 
 The audit includes disabled companies and marks each result as `PASS`, `EMPTY`, or `FAIL`.
@@ -204,7 +208,7 @@ Six staggered workflows run twice daily using Pacific local time. Scheduled runs
 | [`job-watch-workday.yml`](.github/workflows/job-watch-workday.yml) | Workday | 12:30 PM and 6:30 PM Pacific |
 | [`job-watch-avature.yml`](.github/workflows/job-watch-avature.yml) | Avature | 12:45 PM and 6:45 PM Pacific |
 | [`job-watch-eightfold.yml`](.github/workflows/job-watch-eightfold.yml) | Eightfold | 1:00 PM and 7:00 PM Pacific |
-| [`job-watch-custom.yml`](.github/workflows/job-watch-custom.yml) | Apple and future company-specific adapters | 1:15 PM and 7:15 PM Pacific |
+| [`job-watch-custom.yml`](.github/workflows/job-watch-custom.yml) | Apple, TikTok, and ByteDance | 1:15 PM and 7:15 PM Pacific |
 
 All six workflows share a concurrency group so only one can access the Google Sheet at a time. Each workflow can also be run manually from its own Actions page, or with:
 

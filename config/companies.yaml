@@ -805,3 +805,19 @@ companies:
   enabled: true
   adapter: apple
   handle: apple
+- id: tiktok
+  name: TikTok
+  enabled: true
+  adapter: bytedance
+  handle: tiktok
+  apiBaseUrl: https://api.lifeattiktok.com/api/v1/public/supplier
+  careerBaseUrl: https://lifeattiktok.com/search
+  websitePath: tiktok
+- id: bytedance
+  name: ByteDance
+  enabled: true
+  adapter: bytedance
+  handle: bytedance
+  apiBaseUrl: https://jobs.bytedance.com/api/v1/public/supplier
+  careerBaseUrl: https://joinbytedance.com/search
+  websitePath: en

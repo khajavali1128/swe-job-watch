@@ -35,6 +35,16 @@ const companies: CompanyConfig[] = [
     handle: "greenhouse-company",
   },
   {
+    id: "bytedance-company",
+    name: "ByteDance Company",
+    enabled: true,
+    adapter: "bytedance",
+    handle: "bytedance",
+    apiBaseUrl: "https://jobs.bytedance.example/api/v1/public/supplier",
+    careerBaseUrl: "https://careers.bytedance.example/search",
+    websitePath: "en",
+  },
+  {
     id: "oracle-company",
     name: "Oracle Company",
     enabled: true,
@@ -63,6 +73,7 @@ describe("selectEnabledCompanies", () => {
         "avature-company",
         "eightfold-company",
         "greenhouse-company",
+        "bytedance-company",
         "oracle-company",
       ]);
   });
@@ -79,6 +90,8 @@ describe("selectEnabledCompanies", () => {
     expect(
       selectEnabledCompanies(companies, "apple,eightfold").map(({ id }) => id),
     ).toEqual(["apple-company", "eightfold-company"]);
+    expect(selectEnabledCompanies(companies, "bytedance").map(({ id }) => id))
+      .toEqual(["bytedance-company"]);
   });
 
   it("rejects unsupported adapter names", () => {

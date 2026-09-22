@@ -1,6 +1,7 @@
 import { AppleAdapter } from "../src/adapters/apple.js";
 import { AshbyAdapter } from "../src/adapters/ashby.js";
 import { AvatureAdapter } from "../src/adapters/avature.js";
+import { ByteDanceAdapter } from "../src/adapters/bytedance.js";
 import { EightfoldAdapter } from "../src/adapters/eightfold.js";
 import { GreenhouseAdapter } from "../src/adapters/greenhouse.js";
 import { LeverAdapter } from "../src/adapters/lever.js";
@@ -95,6 +96,8 @@ function createAdapter(company: CompanyConfig): JobAdapter {
       return new AshbyAdapter();
     case "avature":
       return new AvatureAdapter();
+    case "bytedance":
+      return new ByteDanceAdapter();
     case "eightfold":
       return new EightfoldAdapter();
     case "greenhouse":
@@ -112,13 +115,28 @@ function createAdapter(company: CompanyConfig): JobAdapter {
 
 async function main(): Promise<void> {
   const { companies } = await loadConfig();
+  const companySelector = process.argv[2]?.trim().toLowerCase();
+  const selectedCompanies = companySelector
+    ? companies.filter(
+        (company) =>
+          company.id.toLowerCase() === companySelector ||
+          company.name.toLowerCase() === companySelector,
+      )
+    : companies;
+
+  if (selectedCompanies.length === 0) {
+    throw new Error(`Unknown company: ${process.argv[2]}`);
+  }
+
   const results: CompanyCheckResult[] = [];
 
   console.log(
-    `Checking listing APIs for all ${companies.length} configured companies...\n`,
+    companySelector
+      ? `Checking listing API for ${selectedCompanies[0].name}...\n`
+      : `Checking listing APIs for all ${companies.length} configured companies...\n`,
   );
 
-  for (const company of companies) {
+  for (const company of selectedCompanies) {
     results.push(await checkCompany(company));
   }
 

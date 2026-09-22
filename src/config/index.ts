@@ -3,6 +3,7 @@ export type {
   AppConfig,
   AppleCompanyConfig,
   AvatureCompanyConfig,
+  ByteDanceCompanyConfig,
   CompaniesConfig,
   CompanyConfig,
   EightfoldCompanyConfig,
