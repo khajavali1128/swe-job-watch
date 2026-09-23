@@ -807,7 +807,7 @@ companies:
   apiBaseUrl: https://explore.jobs.netflix.net
 - id: apple
   name: Apple
-  enabled: false
+  enabled: true
   adapter: apple
   handle: apple
 - id: tiktok
@@ -820,7 +820,7 @@ companies:
   websitePath: tiktok
 - id: bytedance
   name: ByteDance
-  enabled: false
+  enabled: true
   adapter: bytedance
   handle: bytedance
   apiBaseUrl: https://jobs.bytedance.com/api/v1/public/supplier
