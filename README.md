@@ -70,7 +70,7 @@ Every adapter produces the shared `JobSummary` and `JobDetails` types. Apple cre
 
 All editable qualification rules live in [`config/filters.yaml`](config/filters.yaml). The current policy:
 
-- Considers jobs posted within the last 25 hours, providing a one-hour safety buffer around scheduled runs.
+- Considers jobs posted within the last 7 days.
 - Accepts U.S. locations, U.S.-remote roles, and multi-location roles containing a U.S. location.
 - Requires a configured software-development title match.
 - Normalizes punctuation and whitespace, so titles such as `Full-Stack Engineer` match configured phrases such as `full stack engineer`.
