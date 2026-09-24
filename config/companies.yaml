@@ -781,6 +781,55 @@ companies:
   handle: Careers
   apiBaseUrl: https://amgen.wd1.myworkdayjobs.com
   tenant: amgen
+- id: vanguard
+  name: Vanguard
+  enabled: true
+  adapter: workday
+  handle: vanguard_external
+  apiBaseUrl: https://vanguard.wd5.myworkdayjobs.com
+  tenant: vanguard
+- id: cigna
+  name: Cigna
+  enabled: true
+  adapter: workday
+  handle: cignacareers
+  apiBaseUrl: https://cigna.wd5.myworkdayjobs.com
+  tenant: cigna
+- id: general-motors
+  name: General Motors
+  enabled: true
+  adapter: workday
+  handle: Careers_GM
+  apiBaseUrl: https://generalmotors.wd5.myworkdayjobs.com
+  tenant: generalmotors
+- id: fidelity-investments
+  name: Fidelity Investments
+  enabled: true
+  adapter: workday
+  handle: FidelityCareers
+  apiBaseUrl: https://fmr.wd1.myworkdayjobs.com
+  tenant: fmr
+- id: state-street
+  name: State Street
+  enabled: true
+  adapter: workday
+  handle: Global
+  apiBaseUrl: https://statestreet.wd1.myworkdayjobs.com
+  tenant: statestreet
+- id: us-bank
+  name: U.S. Bank
+  enabled: true
+  adapter: workday
+  handle: US_Bank_Careers
+  apiBaseUrl: https://usbank.wd1.myworkdayjobs.com
+  tenant: usbank
+- id: medtronic
+  name: Medtronic
+  enabled: true
+  adapter: workday
+  handle: MedtronicCareers
+  apiBaseUrl: https://medtronic.wd1.myworkdayjobs.com
+  tenant: medtronic
 - id: jpmorgan-chase
   name: JPMorgan Chase
   enabled: true
@@ -896,3 +945,9 @@ companies:
   adapter: successfactors
   apiBaseUrl: https://careers.ey.com
   searchPath: /ey/search/?optionsFacetsDD_country=US&sortColumn=referencedate&sortDirection=desc
+- id: capgemini
+  name: Capgemini
+  enabled: true
+  adapter: successfactors
+  apiBaseUrl: https://careers.capgemini.com
+  searchPath: /search/?q=software&locationsearch=United+States&sortColumn=referencedate&sortDirection=desc
