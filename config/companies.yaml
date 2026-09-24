@@ -805,6 +805,36 @@ companies:
   adapter: eightfold
   handle: netflix.com
   apiBaseUrl: https://explore.jobs.netflix.net
+- id: qualcomm
+  name: Qualcomm
+  enabled: true
+  adapter: eightfold
+  handle: qualcomm.com
+  apiBaseUrl: https://qualcomm.eightfold.ai
+- id: citi
+  name: Citi
+  enabled: true
+  adapter: eightfold
+  handle: citi.com
+  apiBaseUrl: https://citi.eightfold.ai
+- id: ford
+  name: Ford
+  enabled: true
+  adapter: eightfold
+  handle: ford.com
+  apiBaseUrl: https://ford.eightfold.ai
+- id: micron
+  name: Micron Technology
+  enabled: true
+  adapter: eightfold
+  handle: micron.com
+  apiBaseUrl: https://micron.eightfold.ai
+- id: applied-materials
+  name: Applied Materials
+  enabled: true
+  adapter: eightfold
+  handle: appliedmaterials.com
+  apiBaseUrl: https://appliedmaterials.eightfold.ai
 - id: apple
   name: Apple
   enabled: true

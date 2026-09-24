@@ -112,6 +112,24 @@ describe("filterJobSummaries", () => {
     expect(filterJobSummaries(jobs, filters, NOW)).toHaveLength(0);
   });
 
+  it("rejects Eightfold non-U.S. location formats", () => {
+    const jobs = [
+      makeJob({
+        jobId: "mexico",
+        title: "Design System Developer - Angular",
+        location: "CIUDAD DE MEXICO, Distrito Federal, Mexico",
+      }),
+      makeJob({
+        jobId: "taiwan",
+        location: "Taichung City, Taichung City, Taiwan",
+      }),
+      makeJob({ jobId: "india-code", location: "Chennai,IND" }),
+      makeJob({ jobId: "israel-code", location: "Rehovot,ISR" }),
+    ];
+
+    expect(filterJobSummaries(jobs, filters, NOW)).toHaveLength(0);
+  });
+
   it("rejects excluded titles and seniority", () => {
     const jobs = [
       makeJob({ jobId: "manager", title: "Software Engineering Manager" }),

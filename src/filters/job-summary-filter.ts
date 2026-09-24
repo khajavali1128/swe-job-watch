@@ -55,8 +55,19 @@ const US_STATE_NAMES = [
   "district of columbia",
 ];
 
-const US_STATE_CODE_PATTERN =
-  /(?:^|,|\s)(?:AL|AK|AZ|AR|CA|CO|CT|DE|FL|GA|HI|ID|IL|IN|IA|KS|KY|LA|ME|MD|MA|MI|MN|MS|MO|MT|NE|NV|NH|NJ|NM|NY|NC|ND|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VT|VA|WA|WV|WI|WY|DC)(?=\s|,|\d|$)/;
+const US_STATE_CODES = new Set([
+  "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
+  "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
+  "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
+  "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
+  "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+  "DC",
+]);
+
+const US_STATE_CODE_PATTERN = new RegExp(
+  `(?:^|[,;/()])\\s*(?:${[...US_STATE_CODES].join("|")})` +
+    "(?=\\s*(?:[,;/()]|\\d|$))",
+);
 
 const NON_US_MARKERS = [
   "argentina",
@@ -78,8 +89,15 @@ const NON_US_MARKERS = [
   "singapore",
   "south korea",
   "spain",
+  "sweden",
+  "switzerland",
+  "taiwan",
+  "thailand",
   "united kingdom",
+  "united arab emirates",
   "uk",
+  "vietnam",
+  "israel",
 ];
 
 const NEW_GRAD_YEAR_PATTERN = /\b(?:2026|2027|2028)\b/;
@@ -128,10 +146,14 @@ function matchesLocation(
     return true;
   }
 
-  const locationText = `${job.title} ${job.location}`;
+  const locationText = job.location;
   const normalizedLocation = locationText.toLowerCase();
+  const normalizedLocationContext = `${job.title} ${locationText}`
+    .toLowerCase();
+  const locationCodes = extractLocationCodes(locationText);
   const hasUsCountry =
-    /\b(united states|usa|u\.s\.|us)\b/i.test(locationText);
+    /\b(united states|usa|u\.s\.|us)\b/i.test(locationText) ||
+    locationCodes.some((code) => code === "US" || code === "USA");
   const hasUsState =
     US_STATE_NAMES.some((state) => normalizedLocation.includes(state)) ||
     US_STATE_CODE_PATTERN.test(locationText);
@@ -148,13 +170,12 @@ function matchesLocation(
   }
 
   const isExplicitlyNonUs = NON_US_MARKERS.some((marker) =>
-    containsWholeTerm(normalizedLocation, marker),
+    containsWholeTerm(normalizedLocationContext, marker),
   );
-  const countryCode = /(?:^|[,;])\s*([a-z]{2})\s*$/i.exec(
-    job.location,
-  )?.[1];
-  const hasNonUsCountryCode =
-    countryCode !== undefined && countryCode.toUpperCase() !== "US";
+  const hasNonUsCountryCode = locationCodes.some(
+    (code) =>
+      code !== "US" && code !== "USA" && !US_STATE_CODES.has(code),
+  );
 
   if (
     (isExplicitlyNonUs || hasNonUsCountryCode) &&
@@ -164,6 +185,11 @@ function matchesLocation(
   }
 
   return true;
+}
+
+function extractLocationCodes(value: string): string[] {
+  return [...value.matchAll(/(?:^|[,;])\s*([a-z]{2,3})(?=\s*(?:[,;]|$))/gi)]
+    .map((match) => match[1]!.toUpperCase());
 }
 
 function matchesRole(title: string, filters: FiltersConfig): boolean {
