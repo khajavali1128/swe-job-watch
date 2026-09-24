@@ -380,7 +380,7 @@ describe("WorkdayAdapter", () => {
                 externalPath: "/job/San-Jose/Software-Engineer_R162345",
                 locationsText: "San Jose, California, United States",
                 postedOn: "Posted Today",
-                bulletFields: ["R162345"],
+                bulletFields: ["Spotlight Job", "R162345"],
               },
               {
                 title: "Platform Engineer",

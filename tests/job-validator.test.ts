@@ -3,8 +3,9 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { loadConfig, type FiltersConfig } from "../src/config/index.js";
 import type { JobDetails } from "../src/types.js";
 
-const { generateContent } = vi.hoisted(() => ({
+const { generateContent, parseOpenAIResponse } = vi.hoisted(() => ({
   generateContent: vi.fn(),
+  parseOpenAIResponse: vi.fn(),
 }));
 
 vi.mock("@google/genai", () => ({
@@ -13,7 +14,16 @@ vi.mock("@google/genai", () => ({
   },
 }));
 
-import { validateJobWithGemini } from "../src/ai/job-validator.js";
+vi.mock("openai", () => ({
+  default: class {
+    responses = { parse: parseOpenAIResponse };
+  },
+}));
+
+import {
+  validateJobWithGemini,
+  validateJobWithOpenAI,
+} from "../src/ai/job-validator.js";
 
 let filters: FiltersConfig;
 
@@ -23,7 +33,9 @@ beforeAll(async () => {
 
 beforeEach(() => {
   process.env.GEMINI_API_KEY = "test-key";
+  process.env.OPENAI_API_KEY = "test-key";
   generateContent.mockReset();
+  parseOpenAIResponse.mockReset();
 });
 
 const job: JobDetails = {
@@ -58,7 +70,7 @@ describe("validateJobWithGemini", () => {
     });
 
     await expect(validateJobWithGemini(job, filters)).rejects.toThrow(
-      "expected REJECTED",
+      "Gemini returned an inconsistent decision: expected REJECTED",
     );
   });
 
@@ -182,5 +194,29 @@ describe("validateJobWithGemini", () => {
       decision: "REJECTED",
       citizenshipRequired: true,
     });
+  });
+});
+
+describe("validateJobWithOpenAI", () => {
+  it("identifies OpenAI as the source of an inconsistent result", async () => {
+    parseOpenAIResponse.mockResolvedValue({
+      output_parsed: {
+        decision: "REJECTED",
+        roleMatch: true,
+        usEligible: true,
+        excludedSeniority: false,
+        excludedDomain: false,
+        excludedEmploymentType: false,
+        sponsorshipEligible: true,
+        citizenshipRequired: false,
+        requiredYears: 2,
+        experienceStatus: "WITHIN_LIMIT",
+        reasons: ["The role otherwise satisfies the configured rules."],
+      },
+    });
+
+    await expect(validateJobWithOpenAI(job, filters)).rejects.toThrow(
+      "OpenAI returned an inconsistent decision: expected QUALIFIED",
+    );
   });
 });

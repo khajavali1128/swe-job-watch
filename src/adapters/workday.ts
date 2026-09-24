@@ -53,10 +53,7 @@ export class WorkdayAdapter implements JobAdapter {
       }
 
       const externalPath = normalizePath(listing.externalPath);
-      const jobId = listing.bulletFields?.find(
-        (field): field is string =>
-          typeof field === "string" && field.trim().length > 0,
-      )?.trim() ?? externalPath;
+      const jobId = workdayJobId(listing, externalPath);
       this.pathCache.set(cacheKey(company.id, jobId), externalPath);
 
       summaries.push({
@@ -208,6 +205,27 @@ function isValidListing(
     typeof candidate.externalPath === "string" &&
     candidate.externalPath.trim().length > 0
   );
+}
+
+function workdayJobId(
+  listing: WorkdayListing,
+  externalPath: string,
+): string {
+  const fields = (listing.bulletFields ?? [])
+    .filter(
+      (field): field is string =>
+        typeof field === "string" && field.trim().length > 0,
+    )
+    .map((field) => field.trim());
+  const pathJobId = fields.find((field) =>
+    externalPath.toLowerCase().includes(field.toLowerCase())
+  );
+
+  if (pathJobId) {
+    return pathJobId;
+  }
+
+  return fields.length === 1 ? fields[0]! : externalPath;
 }
 
 function workdayListingIdentifier(listing: unknown): string {

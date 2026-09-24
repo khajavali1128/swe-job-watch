@@ -753,6 +753,34 @@ companies:
   handle: MarvellCareers
   apiBaseUrl: https://marvell.wd1.myworkdayjobs.com
   tenant: marvell
+- id: intel
+  name: Intel
+  enabled: true
+  adapter: workday
+  handle: External
+  apiBaseUrl: https://intel.wd1.myworkdayjobs.com
+  tenant: intel
+- id: fis
+  name: FIS
+  enabled: true
+  adapter: workday
+  handle: SearchJobs
+  apiBaseUrl: https://fis.wd5.myworkdayjobs.com
+  tenant: fis
+- id: hpe
+  name: Hewlett Packard Enterprise
+  enabled: true
+  adapter: workday
+  handle: Jobsathpe
+  apiBaseUrl: https://hpe.wd5.myworkdayjobs.com
+  tenant: hpe
+- id: amgen
+  name: Amgen
+  enabled: true
+  adapter: workday
+  handle: Careers
+  apiBaseUrl: https://amgen.wd1.myworkdayjobs.com
+  tenant: amgen
 - id: jpmorgan-chase
   name: JPMorgan Chase
   enabled: true
@@ -805,6 +833,12 @@ companies:
   adapter: eightfold
   handle: netflix.com
   apiBaseUrl: https://explore.jobs.netflix.net
+- id: morgan-stanley
+  name: Morgan Stanley
+  enabled: true
+  adapter: eightfold
+  handle: morganstanley.com
+  apiBaseUrl: https://morganstanley.eightfold.ai
 - id: qualcomm
   name: Qualcomm
   enabled: true

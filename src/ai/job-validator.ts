@@ -141,7 +141,7 @@ export async function validateJobWithGemini(
     );
   }
 
-  assertLogicalConsistency(validationResult.data, filters);
+  assertLogicalConsistency(validationResult.data, filters, "Gemini");
 
   return validationResult.data;
 }
@@ -182,7 +182,7 @@ export async function validateJobWithOpenAI(
     );
   }
 
-  assertLogicalConsistency(validationResult.data, filters);
+  assertLogicalConsistency(validationResult.data, filters, "OpenAI");
   return validationResult.data;
 }
 
@@ -203,6 +203,7 @@ export async function validateJob(
 function assertLogicalConsistency(
   result: JobValidationResult,
   filters: FiltersConfig,
+  provider: "Gemini" | "OpenAI",
 ): void {
   const expectedExperienceStatus =
     result.requiredYears === null
@@ -213,7 +214,7 @@ function assertLogicalConsistency(
 
   if (result.experienceStatus !== expectedExperienceStatus) {
     throw new Error(
-      `Gemini returned an inconsistent experience result: requiredYears=${result.requiredYears} requires experienceStatus=${expectedExperienceStatus}`,
+      `${provider} returned an inconsistent experience result: requiredYears=${result.requiredYears} requires experienceStatus=${expectedExperienceStatus}`,
     );
   }
 
@@ -234,7 +235,7 @@ function assertLogicalConsistency(
 
   if (result.decision !== expectedDecision) {
     throw new Error(
-      `Gemini returned an inconsistent decision: expected ${expectedDecision} from the structured validation fields, received ${result.decision}`,
+      `${provider} returned an inconsistent decision: expected ${expectedDecision} from the structured validation fields, received ${result.decision}`,
     );
   }
 }
