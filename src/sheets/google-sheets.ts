@@ -35,7 +35,10 @@ const HEADERS = [
   "Job URL",
   "Title",
   "Posted Date",
+  "H1B Rank",
+  "Tag",
 ];
+const H1B_RANKINGS_TAB = "H1B Rankings";
 const PROCESSED_JOBS_TAB = "Processed Jobs";
 const PROCESSED_JOBS_HEADERS = [
   "Job Key",
@@ -51,6 +54,7 @@ export class GoogleSheetsJobStore {
   private readonly sheets: sheets_v4.Sheets;
   private sheetTab: string | undefined;
   private processedJobsTab: string | undefined;
+  private companyRankings: Map<string, number> | undefined;
 
   constructor(private readonly config = loadGoogleSheetsConfig()) {
     const auth = config.serviceAccountKeyFile
@@ -103,16 +107,19 @@ export class GoogleSheetsJobStore {
       };
     }
 
+    const companyRankings = await this.loadCompanyRankings();
     const rows = newRecords.map(({ job }) => [
       job.companyName,
       job.url,
       job.title,
       formatPostedDate(job.postedAt),
+      companyRankings.get(job.companyId) ?? "",
+      "",
     ]);
 
     const appendResponse = await this.sheets.spreadsheets.values.append({
       spreadsheetId: this.config.spreadsheetId,
-      range: `${sheetName(sheetTab)}!A:D`,
+      range: `${sheetName(sheetTab)}!A:F`,
       valueInputOption: "USER_ENTERED",
       insertDataOption: "INSERT_ROWS",
       requestBody: { values: rows },
@@ -203,7 +210,7 @@ export class GoogleSheetsJobStore {
   }
 
   private async ensureHeaders(): Promise<void> {
-    const range = `${sheetName(await this.resolveSheetTab())}!A1:D1`;
+    const range = `${sheetName(await this.resolveSheetTab())}!A1:F1`;
     const response = await this.sheets.spreadsheets.values.get({
       spreadsheetId: this.config.spreadsheetId,
       range,
@@ -292,6 +299,63 @@ export class GoogleSheetsJobStore {
       valueInputOption: "RAW",
       requestBody: { values: [PROCESSED_JOBS_HEADERS] },
     });
+  }
+
+  private async loadCompanyRankings(): Promise<Map<string, number>> {
+    if (this.companyRankings) {
+      return this.companyRankings;
+    }
+
+    const rankings = new Map<string, number>();
+
+    try {
+      const response = await this.sheets.spreadsheets.values.get({
+        spreadsheetId: this.config.spreadsheetId,
+        range: `${sheetName(H1B_RANKINGS_TAB)}!A2:C`,
+      });
+      const invalidRows: number[] = [];
+      const duplicateCompanyIds = new Set<string>();
+
+      for (const [index, row] of (response.data.values ?? []).entries()) {
+        const companyId = typeof row[0] === "string" ? row[0].trim() : "";
+        const rank = Number(row[2]);
+
+        if (!companyId) {
+          continue;
+        }
+
+        if (!Number.isInteger(rank) || rank < 1) {
+          invalidRows.push(index + 2);
+          continue;
+        }
+
+        if (rankings.has(companyId)) {
+          duplicateCompanyIds.add(companyId);
+          continue;
+        }
+
+        rankings.set(companyId, rank);
+      }
+
+      if (invalidRows.length > 0) {
+        console.warn(
+          `H1B Rankings contains invalid rank values on row(s): ${invalidRows.join(", ")}`,
+        );
+      }
+
+      if (duplicateCompanyIds.size > 0) {
+        console.warn(
+          `H1B Rankings contains duplicate company IDs: ${[...duplicateCompanyIds].join(", ")}`,
+        );
+      }
+    } catch (error) {
+      console.warn(
+        `H1B ranking lookup unavailable; jobs will be appended without ranks: ${errorMessage(error)}`,
+      );
+    }
+
+    this.companyRankings = rankings;
+    return rankings;
   }
 
   private async readSheetState(): Promise<{
@@ -431,6 +495,10 @@ function jobKey(job: JobDetails): string {
 
 function formatPostedDate(value: Date | null): string {
   return value?.toISOString().slice(0, 10) ?? "";
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 function parseUpdatedRowRange(

@@ -17,6 +17,6 @@ export function isUnavailableSourceError(
 ): error is AdapterHttpError {
   return (
     error instanceof AdapterHttpError &&
-    (error.status === 404 || error.status === 410)
+    (error.status === 404 || error.status === 410 || error.status === 429)
   );
 }

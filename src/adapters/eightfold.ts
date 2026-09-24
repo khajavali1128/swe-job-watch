@@ -50,6 +50,10 @@ type EightfoldApiVariant = "classic" | "pcsx";
 
 const PAGE_SIZE = 10;
 const MAX_PAGES = 200;
+const PCSX_PAGE_DELAY_MS = 750;
+const MAX_RATE_LIMIT_RETRIES = 3;
+const RATE_LIMIT_BACKOFF_MS = 2_000;
+const MAX_RETRY_DELAY_MS = 30_000;
 
 class PcsxUnavailableError extends Error {}
 
@@ -183,6 +187,10 @@ export class EightfoldAdapter implements JobAdapter {
     let start = 0;
 
     for (let page = 0; page < MAX_PAGES; page += 1) {
+      if (page > 0) {
+        await sleep(PCSX_PAGE_DELAY_MS);
+      }
+
       const url = pcsxUrl(company, "/api/pcsx/search");
       url.searchParams.set("sort_by", "timestamp");
       url.searchParams.set("start", String(start));
@@ -320,9 +328,7 @@ async function fetchJson(
   url: URL,
   company: EightfoldCompanyConfig,
 ): Promise<unknown> {
-  const response = await fetch(url, {
-    headers: { Accept: "application/json" },
-  });
+  const response = await fetchWithRateLimitRetry(url, company);
 
   if (!response.ok) {
     throw new AdapterHttpError(
@@ -340,9 +346,7 @@ async function fetchPcsxJson(
   url: URL,
   company: EightfoldCompanyConfig,
 ): Promise<unknown> {
-  const response = await fetch(url, {
-    headers: { Accept: "application/json" },
-  });
+  const response = await fetchWithRateLimitRetry(url, company);
 
   if (!response.ok) {
     const body = await response.text();
@@ -363,6 +367,62 @@ async function fetchPcsxJson(
   }
 
   return response.json();
+}
+
+async function fetchWithRateLimitRetry(
+  url: URL,
+  company: EightfoldCompanyConfig,
+): Promise<Response> {
+  for (let attempt = 0; attempt <= MAX_RATE_LIMIT_RETRIES; attempt += 1) {
+    const response = await fetch(url, {
+      headers: { Accept: "application/json" },
+    });
+
+    if (response.status !== 429 || attempt === MAX_RATE_LIMIT_RETRIES) {
+      return response;
+    }
+
+    const delayMs = retryDelayMs(response.headers.get("retry-after"), attempt);
+    console.warn(
+      `[${company.name}] Eightfold rate limited; retrying in ${delayMs}ms`,
+    );
+    await response.arrayBuffer();
+    await sleep(delayMs);
+  }
+
+  throw new Error(`Eightfold retry loop ended unexpectedly for ${company.name}`);
+}
+
+function retryDelayMs(retryAfter: string | null, attempt: number): number {
+  const retryAfterSeconds = Number(retryAfter);
+
+  if (
+    retryAfter !== null &&
+    Number.isFinite(retryAfterSeconds) &&
+    retryAfterSeconds >= 0
+  ) {
+    return Math.min(retryAfterSeconds * 1_000, MAX_RETRY_DELAY_MS);
+  }
+
+  if (retryAfter) {
+    const retryAt = Date.parse(retryAfter);
+
+    if (!Number.isNaN(retryAt)) {
+      return Math.min(
+        Math.max(0, retryAt - Date.now()),
+        MAX_RETRY_DELAY_MS,
+      );
+    }
+  }
+
+  return Math.min(
+    RATE_LIMIT_BACKOFF_MS * 2 ** attempt,
+    MAX_RETRY_DELAY_MS,
+  );
+}
+
+function sleep(delayMs: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, delayMs));
 }
 
 function normalizeClassicSummary(

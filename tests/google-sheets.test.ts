@@ -96,16 +96,28 @@ beforeEach(() => {
 describe("GoogleSheetsJobStore", () => {
   it("appends jobs directly after the existing rows", async () => {
     valuesAppend.mockResolvedValue({
-      data: { updates: { updatedRange: "'Jobs'!A3:D3" } },
+      data: { updates: { updatedRange: "'Jobs'!A3:F3" } },
     });
     valuesGet
       .mockResolvedValueOnce({
-        data: { values: [["Company", "Job URL", "Title", "Posted Date"]] },
+        data: {
+          values: [[
+            "Company",
+            "Job URL",
+            "Title",
+            "Posted Date",
+            "H1B Rank",
+            "Tag",
+          ]],
+        },
       })
       .mockResolvedValueOnce({
         data: {
           values: [["Existing", "https://example.com/jobs/job-1", "Role"]],
         },
+      })
+      .mockResolvedValueOnce({
+        data: { values: [["example", "Example", 23]] },
       });
 
     const result = await new GoogleSheetsJobStore().appendQualifiedJobs([
@@ -115,6 +127,7 @@ describe("GoogleSheetsJobStore", () => {
     expect(result).toEqual({ appended: 1, duplicates: 0 });
     expect(valuesAppend).toHaveBeenCalledWith(
       expect.objectContaining({
+        range: "'Jobs'!A:F",
         requestBody: {
           values: [
             [
@@ -122,6 +135,8 @@ describe("GoogleSheetsJobStore", () => {
               "https://example.com/jobs/job-2",
               "Platform Developer",
               "2026-09-13",
+              23,
+              "",
             ],
           ],
         },
@@ -138,7 +153,7 @@ describe("GoogleSheetsJobStore", () => {
                 startRowIndex: 2,
                 endRowIndex: 3,
                 startColumnIndex: 0,
-                endColumnIndex: 4,
+                endColumnIndex: 6,
               },
               cell: {
                 userEnteredFormat: {
@@ -162,7 +177,16 @@ describe("GoogleSheetsJobStore", () => {
   it("does not append a duplicate URL", async () => {
     valuesGet
       .mockResolvedValueOnce({
-        data: { values: [["Company", "Job URL", "Title", "Posted Date"]] },
+        data: {
+          values: [[
+            "Company",
+            "Job URL",
+            "Title",
+            "Posted Date",
+            "H1B Rank",
+            "Tag",
+          ]],
+        },
       })
       .mockResolvedValueOnce({
         data: {
@@ -186,6 +210,52 @@ describe("GoogleSheetsJobStore", () => {
     expect(valuesAppend).not.toHaveBeenCalled();
   });
 
+  it("appends a blank rank when the ranking lookup is unavailable", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    valuesAppend.mockResolvedValue({
+      data: { updates: { updatedRange: "'Jobs'!A2:F2" } },
+    });
+    valuesGet
+      .mockResolvedValueOnce({
+        data: {
+          values: [[
+            "Company",
+            "Job URL",
+            "Title",
+            "Posted Date",
+            "H1B Rank",
+            "Tag",
+          ]],
+        },
+      })
+      .mockResolvedValueOnce({ data: { values: [] } })
+      .mockRejectedValueOnce(new Error("ranking tab unavailable"));
+
+    const result = await new GoogleSheetsJobStore().appendQualifiedJobs([
+      qualifiedJob,
+    ]);
+
+    expect(result).toEqual({ appended: 1, duplicates: 0 });
+    expect(valuesAppend).toHaveBeenCalledWith(
+      expect.objectContaining({
+        requestBody: {
+          values: [[
+            "Example",
+            "https://example.com/jobs/job-2",
+            "Platform Developer",
+            "2026-09-13",
+            "",
+            "",
+          ]],
+        },
+      }),
+    );
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining("H1B ranking lookup unavailable"),
+    );
+    warn.mockRestore();
+  });
+
   it("upgrades an existing three-column header", async () => {
     valuesGet
       .mockResolvedValueOnce({
@@ -197,10 +267,17 @@ describe("GoogleSheetsJobStore", () => {
 
     expect(valuesUpdate).toHaveBeenCalledWith({
       spreadsheetId: "sheet-id",
-      range: "'Jobs'!A1:D1",
+      range: "'Jobs'!A1:F1",
       valueInputOption: "RAW",
       requestBody: {
-        values: [["Company", "Job URL", "Title", "Posted Date"]],
+        values: [[
+          "Company",
+          "Job URL",
+          "Title",
+          "Posted Date",
+          "H1B Rank",
+          "Tag",
+        ]],
       },
     });
   });

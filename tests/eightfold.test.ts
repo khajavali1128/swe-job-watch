@@ -130,6 +130,40 @@ describe("EightfoldAdapter", () => {
     );
   });
 
+  it("retries a rate-limited PCS-X request", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        Response.json(
+          { message: "Too many requests" },
+          {
+            status: 429,
+            statusText: "TOO MANY REQUESTS",
+            headers: { "Retry-After": "0" },
+          },
+        ),
+      )
+      .mockResolvedValueOnce(
+        Response.json({
+          status: 200,
+          data: { count: 0, positions: [] },
+        }),
+      );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      new EightfoldAdapter().fetchJobSummaries({
+        id: "qualcomm",
+        name: "Qualcomm",
+        enabled: true,
+        adapter: "eightfold",
+        handle: "qualcomm.com",
+        apiBaseUrl: "https://qualcomm.eightfold.ai",
+      }),
+    ).resolves.toEqual([]);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
   it("supports PCS-X listings and job details", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-09-23T12:00:00.000Z"));

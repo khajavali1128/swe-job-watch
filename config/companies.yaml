@@ -720,7 +720,8 @@ companies:
   tenant: mastercard
 - id: disney
   name: Disney
-  enabled: true
+  # Disabled: no visa sponsorship currently.
+  enabled: false
   adapter: workday
   handle: disneycareer
   apiBaseUrl: https://disney.wd5.myworkdayjobs.com

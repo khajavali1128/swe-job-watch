@@ -2,7 +2,7 @@
 
 SWE Job Watch is a scheduled Node.js and TypeScript service that scans public ATS job boards, filters recently opened U.S. software-engineering roles, validates full job descriptions with AI, and appends qualified jobs to Google Sheets.
 
-The production service currently checks 165 enabled companies across Ashby, Avature, ByteDance's public supplier API, Eightfold, Greenhouse, Lever, SmartRecruiters, SuccessFactors, Oracle Recruiting, and Workday.
+The production service currently checks 164 enabled companies across Ashby, Avature, ByteDance's public supplier API, Eightfold, Greenhouse, Lever, SmartRecruiters, SuccessFactors, Oracle Recruiting, and Workday.
 
 ## Workflow
 
@@ -94,10 +94,14 @@ Only AI-qualified jobs are considered for insertion. Before appending, the servi
 Rows use this layout:
 
 ```text
-Company | Job URL | Title | Posted Date
+Company | Job URL | Title | Posted Date | H1B Rank | Tag
 ```
 
 `Posted Date` is the normalized ATS publication, release, or posting-record date in `YYYY-MM-DD` format. The service retains the complete timestamp internally for rolling-window filtering.
+
+`H1B Rank` is loaded from the `H1B Rankings` tab using the job's stable company ID. That tab begins with `Company ID | Company | H1B Rank`; additional source columns may follow. Companies without a verified mapping receive a blank rank, and an unavailable ranking tab does not block qualified jobs from being appended. The rank reflects historical LCA volume and does not guarantee sponsorship for a specific opening.
+
+`Tag` remains available for manually curated labels such as `FMP Exclusive`. Automated rows leave it blank.
 
 Each run appends new qualified jobs directly after the existing rows. It does not add date-heading rows.
 

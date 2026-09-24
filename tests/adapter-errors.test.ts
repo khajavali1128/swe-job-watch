@@ -6,18 +6,21 @@ import {
 } from "../src/adapters/errors.js";
 
 describe("isUnavailableSourceError", () => {
-  it.each([404, 410])("treats HTTP %i as an unavailable source", (status) => {
-    const error = new AdapterHttpError(
-      "Greenhouse",
-      "Postman",
-      status,
-      "Unavailable",
-    );
+  it.each([404, 410, 429])(
+    "treats HTTP %i as an unavailable source",
+    (status) => {
+      const error = new AdapterHttpError(
+        "Greenhouse",
+        "Postman",
+        status,
+        "Unavailable",
+      );
 
-    expect(isUnavailableSourceError(error)).toBe(true);
-  });
+      expect(isUnavailableSourceError(error)).toBe(true);
+    },
+  );
 
-  it.each([401, 429, 500, 503])(
+  it.each([401, 500, 503])(
     "keeps HTTP %i fatal",
     (status) => {
       const error = new AdapterHttpError(
