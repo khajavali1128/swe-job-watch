@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { load } from "cheerio";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
@@ -141,9 +142,14 @@ export async function validateJobWithGemini(
     );
   }
 
-  assertLogicalConsistency(validationResult.data, filters, "Gemini");
+  const guardedResult = applyDeterministicRestrictions(
+    job,
+    validationResult.data,
+    filters,
+  );
+  assertLogicalConsistency(guardedResult, filters, "Gemini");
 
-  return validationResult.data;
+  return guardedResult;
 }
 
 export async function validateJobWithOpenAI(
@@ -182,8 +188,13 @@ export async function validateJobWithOpenAI(
     );
   }
 
-  assertLogicalConsistency(validationResult.data, filters, "OpenAI");
-  return validationResult.data;
+  const guardedResult = applyDeterministicRestrictions(
+    job,
+    validationResult.data,
+    filters,
+  );
+  assertLogicalConsistency(guardedResult, filters, "OpenAI");
+  return guardedResult;
 }
 
 export async function validateJob(
@@ -238,6 +249,47 @@ function assertLogicalConsistency(
       `${provider} returned an inconsistent decision: expected ${expectedDecision} from the structured validation fields, received ${result.decision}`,
     );
   }
+}
+
+function applyDeterministicRestrictions(
+  job: JobDetails,
+  result: JobValidationResult,
+  filters: FiltersConfig,
+): JobValidationResult {
+  if (
+    !filters.sponsorship.rejectCitizenshipRequirements ||
+    !requiresActiveSecurityClearance(job.description)
+  ) {
+    return result;
+  }
+
+  const clearanceReason =
+    "The role requires an active U.S. government security clearance.";
+
+  return {
+    ...result,
+    citizenshipRequired: true,
+    decision: "REJECTED",
+    reasons: result.reasons.includes(clearanceReason)
+      ? result.reasons
+      : [...result.reasons, clearanceReason],
+  };
+}
+
+function requiresActiveSecurityClearance(description: string): boolean {
+  const text = load(description).text().replace(/\s+/g, " ").trim();
+
+  return (
+    /\bactive\s+(?:u\.?\s*s\.?\s+)?(?:government\s+)?security\s+clearance\b/i.test(
+      text,
+    ) ||
+    /\b(?:must|requires?|required|mandatory|eligible|ability)\b.{0,100}\b(?:obtain(?:ing)?\s+(?:and\s+maintain(?:ing)?\s+)?|hold(?:ing)?\s+|possess(?:ing)?\s+)?(?:an?\s+)?(?:u\.?\s*s\.?\s+)?(?:government\s+)?security\s+clearance\b/i.test(
+      text,
+    ) ||
+    /\b(?:u\.?\s*s\.?\s+)?(?:government\s+)?security\s+clearance\b.{0,80}\b(?:required|mandatory)\b/i.test(
+      text,
+    )
+  );
 }
 
 function errorMessage(error: unknown): string {

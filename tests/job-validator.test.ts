@@ -219,4 +219,39 @@ describe("validateJobWithOpenAI", () => {
       "OpenAI returned an inconsistent decision: expected QUALIFIED",
     );
   });
+
+  it("deterministically rejects an active U.S. security clearance requirement", async () => {
+    parseOpenAIResponse.mockResolvedValue({
+      output_parsed: {
+        decision: "QUALIFIED",
+        roleMatch: true,
+        usEligible: true,
+        excludedSeniority: false,
+        excludedDomain: false,
+        excludedEmploymentType: false,
+        sponsorshipEligible: true,
+        citizenshipRequired: false,
+        requiredYears: 2,
+        experienceStatus: "WITHIN_LIMIT",
+        reasons: ["The role otherwise satisfies the configured rules."],
+      },
+    });
+    const clearanceJob = {
+      ...job,
+      description: `
+        <p>Minimum qualifications</p>
+        <ul><li>Active US Security Clearance at or above the Secret level.</li></ul>
+      `,
+    };
+
+    await expect(
+      validateJobWithOpenAI(clearanceJob, filters),
+    ).resolves.toMatchObject({
+      decision: "REJECTED",
+      citizenshipRequired: true,
+      reasons: expect.arrayContaining([
+        "The role requires an active U.S. government security clearance.",
+      ]),
+    });
+  });
 });

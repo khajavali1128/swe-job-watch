@@ -331,7 +331,8 @@ companies:
   handle: gleanwork
 - id: instabase
   name: Instabase
-  enabled: true
+  # Disabled: temporarily unavailable.
+  enabled: false
   adapter: greenhouse
   handle: instabase
 - id: grafana-labs
@@ -952,3 +953,83 @@ companies:
   adapter: successfactors
   apiBaseUrl: https://careers.capgemini.com
   searchPath: /search/?q=software&locationsearch=United+States&sortColumn=referencedate&sortDirection=desc
+- id: faire
+  name: Faire
+  enabled: true
+  adapter: greenhouse
+  handle: faire
+- id: flexport
+  name: Flexport
+  enabled: true
+  adapter: greenhouse
+  handle: flexport
+- id: rubrik
+  name: Rubrik
+  enabled: true
+  adapter: greenhouse
+  handle: rubrik
+- id: box
+  name: Box
+  enabled: true
+  adapter: greenhouse
+  handle: boxinc
+- id: digitalocean
+  name: DigitalOcean
+  enabled: true
+  adapter: greenhouse
+  handle: digitalocean98
+- id: udemy
+  name: Udemy
+  enabled: true
+  adapter: greenhouse
+  handle: udemy
+- id: pure-storage
+  name: Pure Storage
+  enabled: true
+  adapter: greenhouse
+  handle: purestorage
+- id: wiz
+  name: Wiz
+  enabled: true
+  adapter: greenhouse
+  handle: wizinc
+- id: fastly
+  name: Fastly
+  enabled: true
+  adapter: greenhouse
+  handle: fastly
+- id: algolia
+  name: Algolia
+  enabled: true
+  adapter: greenhouse
+  handle: algolia
+- id: contentful
+  name: Contentful
+  enabled: true
+  adapter: greenhouse
+  handle: contentful
+- id: coursera
+  name: Coursera
+  enabled: true
+  adapter: greenhouse
+  handle: coursera
+- id: airbyte
+  name: Airbyte
+  enabled: true
+  adapter: ashby
+  handle: airbyte
+- id: watershed
+  name: Watershed
+  enabled: true
+  adapter: ashby
+  handle: watershed
+- id: warp
+  name: Warp
+  enabled: true
+  adapter: ashby
+  handle: warp
+- id: semgrep
+  name: Semgrep
+  enabled: true
+  adapter: ashby
+  handle: semgrep
