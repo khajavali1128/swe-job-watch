@@ -949,20 +949,10 @@ companies:
   searchPath: /ey/search/?optionsFacetsDD_country=US&sortColumn=referencedate&sortDirection=desc
 - id: capgemini
   name: Capgemini
-  enabled: true
+  enabled: false # Disabled by request
   adapter: successfactors
   apiBaseUrl: https://careers.capgemini.com
   searchPath: /search/?q=software&locationsearch=United+States&sortColumn=referencedate&sortDirection=desc
-- id: faire
-  name: Faire
-  enabled: true
-  adapter: greenhouse
-  handle: faire
-- id: flexport
-  name: Flexport
-  enabled: true
-  adapter: greenhouse
-  handle: flexport
 - id: rubrik
   name: Rubrik
   enabled: true
@@ -973,63 +963,48 @@ companies:
   enabled: true
   adapter: greenhouse
   handle: boxinc
-- id: digitalocean
-  name: DigitalOcean
-  enabled: true
-  adapter: greenhouse
-  handle: digitalocean98
-- id: udemy
-  name: Udemy
-  enabled: true
-  adapter: greenhouse
-  handle: udemy
 - id: pure-storage
   name: Pure Storage
   enabled: true
   adapter: greenhouse
   handle: purestorage
-- id: wiz
-  name: Wiz
+- id: lucid-motors
+  name: Lucid Motors
   enabled: true
   adapter: greenhouse
-  handle: wizinc
-- id: fastly
-  name: Fastly
+  handle: lucidmotors
+- id: att
+  name: AT&T
   enabled: true
-  adapter: greenhouse
-  handle: fastly
-- id: algolia
-  name: Algolia
+  adapter: workday
+  apiBaseUrl: https://att.wd1.myworkdayjobs.com
+  tenant: att
+  handle: ATTGeneral
+- id: t-mobile
+  name: T-Mobile
   enabled: true
-  adapter: greenhouse
-  handle: algolia
-- id: contentful
-  name: Contentful
+  adapter: workday
+  apiBaseUrl: https://tmobile.wd1.myworkdayjobs.com
+  tenant: tmobile
+  handle: External
+- id: elevance-health
+  name: Elevance Health
   enabled: true
-  adapter: greenhouse
-  handle: contentful
-- id: coursera
-  name: Coursera
+  adapter: workday
+  apiBaseUrl: https://elevancehealth.wd1.myworkdayjobs.com
+  tenant: elevancehealth
+  handle: ANT
+- id: kla
+  name: KLA
   enabled: true
-  adapter: greenhouse
-  handle: coursera
-- id: airbyte
-  name: Airbyte
+  adapter: workday
+  apiBaseUrl: https://kla.wd1.myworkdayjobs.com
+  tenant: kla
+  handle: Search
+- id: humana
+  name: Humana
   enabled: true
-  adapter: ashby
-  handle: airbyte
-- id: watershed
-  name: Watershed
-  enabled: true
-  adapter: ashby
-  handle: watershed
-- id: warp
-  name: Warp
-  enabled: true
-  adapter: ashby
-  handle: warp
-- id: semgrep
-  name: Semgrep
-  enabled: true
-  adapter: ashby
-  handle: semgrep
+  adapter: workday
+  apiBaseUrl: https://humana.wd5.myworkdayjobs.com
+  tenant: humana
+  handle: Humana_External_Career_Site

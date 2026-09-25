@@ -254,4 +254,78 @@ describe("validateJobWithOpenAI", () => {
       ]),
     });
   });
+
+  it("deterministically rejects mandatory experience above the limit", async () => {
+    parseOpenAIResponse.mockResolvedValue({
+      output_parsed: {
+        decision: "QUALIFIED",
+        roleMatch: true,
+        usEligible: true,
+        excludedSeniority: false,
+        excludedDomain: false,
+        excludedEmploymentType: false,
+        sponsorshipEligible: true,
+        citizenshipRequired: false,
+        requiredYears: null,
+        experienceStatus: "NOT_SPECIFIED",
+        reasons: ["No mandatory experience requirement was identified."],
+      },
+    });
+    const crowdStrikeJob = {
+      ...job,
+      description: `
+        <p><strong>What You'll Need:</strong></p>
+        <ul>
+          <li>10(+) years' experience combined between backend/cloud development and data platform engineering roles</li>
+          <li>5+ years of experience programming with Java, Scala or Kotlin</li>
+        </ul>
+      `,
+    };
+
+    await expect(
+      validateJobWithOpenAI(crowdStrikeJob, filters),
+    ).resolves.toMatchObject({
+      decision: "REJECTED",
+      requiredYears: 10,
+      experienceStatus: "OVER_LIMIT",
+      reasons: expect.arrayContaining([
+        "The role explicitly requires at least 10 years of experience, exceeding the configured maximum of 4 years.",
+      ]),
+    });
+  });
+
+  it("does not treat preferred experience as mandatory", async () => {
+    parseOpenAIResponse.mockResolvedValue({
+      output_parsed: {
+        decision: "QUALIFIED",
+        roleMatch: true,
+        usEligible: true,
+        excludedSeniority: false,
+        excludedDomain: false,
+        excludedEmploymentType: false,
+        sponsorshipEligible: true,
+        citizenshipRequired: false,
+        requiredYears: 2,
+        experienceStatus: "WITHIN_LIMIT",
+        reasons: ["Two years of experience are required."],
+      },
+    });
+    const preferredExperienceJob = {
+      ...job,
+      description: `
+        <p><strong>Minimum Qualifications</strong></p>
+        <ul><li>At least 2 years of experience developing software.</li></ul>
+        <p><strong>Preferred Qualifications</strong></p>
+        <ul><li>5+ years of experience developing distributed systems.</li></ul>
+      `,
+    };
+
+    await expect(
+      validateJobWithOpenAI(preferredExperienceJob, filters),
+    ).resolves.toMatchObject({
+      decision: "QUALIFIED",
+      requiredYears: 2,
+      experienceStatus: "WITHIN_LIMIT",
+    });
+  });
 });

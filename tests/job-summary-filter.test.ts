@@ -72,11 +72,22 @@ describe("filterJobSummaries", () => {
   });
 
   it("rejects vice president engineering roles", () => {
-    const job = makeJob({
-      title: "Vice President - Site Reliability Engineer",
-    });
+    const jobs = [
+      makeJob({
+        jobId: "vice-president",
+        title: "Vice President - Site Reliability Engineer",
+      }),
+      makeJob({
+        jobId: "svp",
+        title: "Head of Developer Platforms & Experience, SVP, SVP",
+      }),
+      makeJob({
+        jobId: "vp",
+        title: "VP, Software Engineering",
+      }),
+    ];
 
-    expect(filterJobSummaries([job], filters, NOW)).toHaveLength(0);
+    expect(filterJobSummaries(jobs, filters, NOW)).toHaveLength(0);
   });
 
   it("rejects a listing outside the freshness window", () => {

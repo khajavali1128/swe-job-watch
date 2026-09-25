@@ -74,6 +74,11 @@ seniority:
     - manager
     - director
     - vice president
+    - vp
+    - svp
+    - evp
+    - avp
+    - head of
 
 experience:
   maxRequiredYears: 4

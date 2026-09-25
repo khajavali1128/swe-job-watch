@@ -1,5 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { load } from "cheerio";
+import { load, type CheerioAPI } from "cheerio";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
@@ -256,24 +256,148 @@ function applyDeterministicRestrictions(
   result: JobValidationResult,
   filters: FiltersConfig,
 ): JobValidationResult {
+  let guardedResult = result;
+
   if (
-    !filters.sponsorship.rejectCitizenshipRequirements ||
-    !requiresActiveSecurityClearance(job.description)
+    filters.sponsorship.rejectCitizenshipRequirements &&
+    requiresActiveSecurityClearance(job.description)
   ) {
-    return result;
+    const clearanceReason =
+      "The role requires an active U.S. government security clearance.";
+
+    guardedResult = {
+      ...guardedResult,
+      citizenshipRequired: true,
+      decision: "REJECTED",
+      reasons: addReason(guardedResult.reasons, clearanceReason),
+    };
   }
 
-  const clearanceReason =
-    "The role requires an active U.S. government security clearance.";
+  const mandatoryYears = findMandatoryExperienceYears(job.description);
 
-  return {
-    ...result,
-    citizenshipRequired: true,
-    decision: "REJECTED",
-    reasons: result.reasons.includes(clearanceReason)
-      ? result.reasons
-      : [...result.reasons, clearanceReason],
-  };
+  if (
+    mandatoryYears !== null &&
+    mandatoryYears > filters.experience.maxRequiredYears
+  ) {
+    const experienceReason =
+      `The role explicitly requires at least ${mandatoryYears} years of experience, exceeding the configured maximum of ${filters.experience.maxRequiredYears} years.`;
+
+    guardedResult = {
+      ...guardedResult,
+      requiredYears: mandatoryYears,
+      experienceStatus: "OVER_LIMIT",
+      decision: "REJECTED",
+      reasons: addReason(guardedResult.reasons, experienceReason),
+    };
+  }
+
+  return guardedResult;
+}
+
+function findMandatoryExperienceYears(description: string): number | null {
+  const $ = load(description);
+  const matches: number[] = [];
+
+  $("li, p").each((_, element) => {
+    const candidate = $(element);
+
+    if (candidate.is("p") && candidate.parents("li").length > 0) {
+      return;
+    }
+
+    const text = candidate.text().replace(/\s+/g, " ").trim();
+
+    if (!text || isPreferredExperience(text)) {
+      return;
+    }
+
+    const section = experienceSection($, element);
+
+    if (
+      section === "preferred" ||
+      (section !== "required" && !hasExplicitRequirementLanguage(text))
+    ) {
+      return;
+    }
+
+    matches.push(...extractExperienceYears(text));
+  });
+
+  return matches.length > 0 ? Math.max(...matches) : null;
+}
+
+function experienceSection(
+  $: CheerioAPI,
+  element: Parameters<CheerioAPI>[0],
+): "required" | "preferred" | "unknown" {
+  let cursor = $(element).is("li") ? $(element).parent() : $(element);
+
+  for (let depth = 0; depth < 4 && cursor.length > 0; depth += 1) {
+    for (const sibling of cursor.prevAll().toArray()) {
+      const classification = classifySectionHeading(
+        $(sibling).text().replace(/\s+/g, " ").trim(),
+      );
+
+      if (classification) {
+        return classification;
+      }
+    }
+
+    cursor = cursor.parent();
+  }
+
+  return "unknown";
+}
+
+function classifySectionHeading(
+  text: string,
+): "required" | "preferred" | null {
+  if (!text || text.length > 160) {
+    return null;
+  }
+
+  if (
+    /\b(?:preferred|nice to have|bonus|desired|ideally)\b/i.test(text)
+  ) {
+    return "preferred";
+  }
+
+  if (
+    /\b(?:minimum|basic|required) qualifications?\b/i.test(text) ||
+    /\b(?:requirements?|qualifications?|what you(?:'|’)?ll need|what you bring)\b/i.test(
+      text,
+    )
+  ) {
+    return "required";
+  }
+
+  return null;
+}
+
+function isPreferredExperience(text: string): boolean {
+  return /\b(?:preferred|nice to have|bonus|desired|ideally)\b/i.test(text);
+}
+
+function hasExplicitRequirementLanguage(text: string): boolean {
+  return /\b(?:at least|minimum(?: of)?|requires?|required|must (?:have|possess))\b/i.test(
+    text,
+  );
+}
+
+function extractExperienceYears(text: string): number[] {
+  const patterns = [
+    /\b(\d{1,2})\s*(?:\(\+\)|\+)\s*years?(?:['’])?\s+(?:of\s+)?experience\b/gi,
+    /\b(?:at least|minimum(?: of)?)\s+(\d{1,2})\s*years?(?:['’])?\s+(?:of\s+)?experience\b/gi,
+    /\b(?:requires?|required|must (?:have|possess))\b.{0,80}\b(\d{1,2})\s*years?(?:['’])?\s+(?:of\s+)?experience\b/gi,
+  ];
+
+  return patterns.flatMap((pattern) =>
+    [...text.matchAll(pattern)].map((match) => Number(match[1]))
+  );
+}
+
+function addReason(reasons: string[], reason: string): string[] {
+  return reasons.includes(reason) ? reasons : [...reasons, reason];
 }
 
 function requiresActiveSecurityClearance(description: string): boolean {
