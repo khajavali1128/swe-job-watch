@@ -2,7 +2,7 @@ name: SWE Job Watch - Custom Careers
 
 on:
   schedule:
-    - cron: "15 13,19 * * 1-6"
+    - cron: "15 13,19 * * *"
       timezone: "America/Los_Angeles"
   workflow_dispatch:
 

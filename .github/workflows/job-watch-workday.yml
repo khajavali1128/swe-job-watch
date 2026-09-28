@@ -2,7 +2,7 @@ name: SWE Job Watch - Workday
 
 on:
   schedule:
-    - cron: "30 12,18 * * 1-6"
+    - cron: "30 12,18 * * *"
       timezone: "America/Los_Angeles"
   workflow_dispatch:
 
