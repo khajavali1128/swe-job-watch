@@ -34,6 +34,15 @@ const SmartRecruitersCompanySchema = createHandleCompanySchema(
 const AshbyCompanySchema = createHandleCompanySchema("ashby");
 export const AppleCompanySchema = createHandleCompanySchema("apple");
 
+export const IcimsCompanySchema = z
+  .object({
+    ...companyBase,
+    adapter: z.literal("icims"),
+    handle: nonEmptyString,
+    apiBaseUrl: urlString,
+  })
+  .strict();
+
 export const ByteDanceCompanySchema = z
   .object({
     ...companyBase,
@@ -102,6 +111,7 @@ export const CompanySchema = z.discriminatedUnion("adapter", [
   EightfoldCompanySchema,
   ByteDanceCompanySchema,
   GreenhouseCompanySchema,
+  IcimsCompanySchema,
   LeverCompanySchema,
   SmartRecruitersCompanySchema,
   AshbyCompanySchema,
@@ -198,6 +208,7 @@ export type AppleCompanyConfig = z.infer<typeof AppleCompanySchema>;
 export type ByteDanceCompanyConfig = z.infer<typeof ByteDanceCompanySchema>;
 export type AvatureCompanyConfig = z.infer<typeof AvatureCompanySchema>;
 export type EightfoldCompanyConfig = z.infer<typeof EightfoldCompanySchema>;
+export type IcimsCompanyConfig = z.infer<typeof IcimsCompanySchema>;
 export type OracleCompanyConfig = z.infer<typeof OracleCompanySchema>;
 export type SuccessFactorsCompanyConfig = z.infer<
   typeof SuccessFactorsCompanySchema

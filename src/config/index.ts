@@ -8,6 +8,7 @@ export type {
   CompanyConfig,
   EightfoldCompanyConfig,
   FiltersConfig,
+  IcimsCompanyConfig,
   OracleCompanyConfig,
   SuccessFactorsCompanyConfig,
   WorkdayCompanyConfig,

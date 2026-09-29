@@ -4,6 +4,7 @@ export type JobSource =
   | "bytedance"
   | "eightfold"
   | "greenhouse"
+  | "icims"
   | "lever"
   | "smartrecruiters"
   | "ashby"

@@ -4,6 +4,7 @@ import { AvatureAdapter } from "../src/adapters/avature.js";
 import { ByteDanceAdapter } from "../src/adapters/bytedance.js";
 import { EightfoldAdapter } from "../src/adapters/eightfold.js";
 import { GreenhouseAdapter } from "../src/adapters/greenhouse.js";
+import { IcimsAdapter } from "../src/adapters/icims.js";
 import { LeverAdapter } from "../src/adapters/lever.js";
 import { OracleAdapter } from "../src/adapters/oracle.js";
 import { SmartRecruitersAdapter } from "../src/adapters/smartrecruiters.js";
@@ -103,6 +104,8 @@ function createAdapter(company: CompanyConfig): JobAdapter {
       return new EightfoldAdapter();
     case "greenhouse":
       return new GreenhouseAdapter();
+    case "icims":
+      return new IcimsAdapter();
     case "lever":
       return new LeverAdapter();
     case "oracle":

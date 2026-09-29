@@ -1033,3 +1033,35 @@ companies:
   enabled: true
   adapter: greenhouse
   handle: roku
+- id: amd
+  name: AMD
+  enabled: true
+  adapter: icims
+  apiBaseUrl: https://careers.amd.com
+  handle: careers-home
+- id: hcltech
+  name: HCLTech
+  enabled: true
+  adapter: successfactors
+  apiBaseUrl: https://careers.hcltech.com
+  searchPath: /services/rss/job/?locale=en_US&keywords=(software)%20AND%20locationSearch:(United%20States)
+- id: wipro
+  name: Wipro
+  enabled: true
+  adapter: successfactors
+  apiBaseUrl: https://careers.wipro.com
+  searchPath: /services/rss/job/?locale=en_US&keywords=(software)%20AND%20locationSearch:(United%20States)
+- id: ebay
+  name: eBay
+  enabled: true
+  adapter: workday
+  apiBaseUrl: https://ebay.wd5.myworkdayjobs.com
+  tenant: ebay
+  handle: apply
+- id: pwc
+  name: PwC
+  enabled: true
+  adapter: workday
+  apiBaseUrl: https://pwc.wd3.myworkdayjobs.com
+  tenant: pwc
+  handle: US_Experienced_Careers

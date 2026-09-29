@@ -1,5 +1,6 @@
 import { AppleAdapter } from "./adapters/apple.js";
 import { GreenhouseAdapter } from "./adapters/greenhouse.js";
+import { IcimsAdapter } from "./adapters/icims.js";
 import { AshbyAdapter } from "./adapters/ashby.js";
 import { AvatureAdapter } from "./adapters/avature.js";
 import { ByteDanceAdapter } from "./adapters/bytedance.js";
@@ -222,6 +223,8 @@ function createAdapter(company: CompanyConfig): JobAdapter {
       return new EightfoldAdapter();
     case "greenhouse":
       return new GreenhouseAdapter();
+    case "icims":
+      return new IcimsAdapter();
     case "lever":
       return new LeverAdapter();
     case "oracle":

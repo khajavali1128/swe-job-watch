@@ -35,6 +35,14 @@ const companies: CompanyConfig[] = [
     handle: "greenhouse-company",
   },
   {
+    id: "icims-company",
+    name: "iCIMS Company",
+    enabled: true,
+    adapter: "icims",
+    handle: "careers-home",
+    apiBaseUrl: "https://careers.example.com",
+  },
+  {
     id: "bytedance-company",
     name: "ByteDance Company",
     enabled: true,
@@ -81,6 +89,7 @@ describe("selectEnabledCompanies", () => {
         "avature-company",
         "eightfold-company",
         "greenhouse-company",
+        "icims-company",
         "bytedance-company",
         "oracle-company",
         "successfactors-company",
@@ -101,6 +110,8 @@ describe("selectEnabledCompanies", () => {
     ).toEqual(["apple-company", "eightfold-company"]);
     expect(selectEnabledCompanies(companies, "bytedance").map(({ id }) => id))
       .toEqual(["bytedance-company"]);
+    expect(selectEnabledCompanies(companies, "icims").map(({ id }) => id))
+      .toEqual(["icims-company"]);
     expect(
       selectEnabledCompanies(companies, "successfactors").map(({ id }) => id),
     ).toEqual(["successfactors-company"]);

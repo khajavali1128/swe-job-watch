@@ -88,6 +88,37 @@ describe("SuccessFactorsAdapter", () => {
     expect(details.description).toContain("Own production systems.");
   });
 
+  it("normalizes dated jobs from official SuccessFactors RSS feeds", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(`
+      <?xml version="1.0" encoding="UTF-8" ?>
+      <rss version="2.0"><channel><item>
+        <title><![CDATA[Platform Developer (Austin, USA-TX, US, 78701)]]></title>
+        <description><![CDATA[<p>Build distributed software.</p>]]></description>
+        <pubDate>Mon, 28 Sep 2026 2:00:00 GMT</pubDate>
+        <link>https://careers.example.com/job/Austin-Platform-Developer/12345/?utm_source=rss</link>
+      </item></channel></rss>
+    `)));
+
+    const adapter = new SuccessFactorsAdapter();
+    const jobs = await adapter.fetchJobSummaries(company);
+
+    expect(jobs[0]).toMatchObject({
+      jobId: "12345",
+      title: "Platform Developer",
+      location: "Austin, USA-TX, US, 78701",
+      url: "https://careers.example.com/job/Austin-Platform-Developer/12345/",
+      source: "successfactors",
+    });
+    expect(jobs[0]?.postedAt?.toISOString()).toBe(
+      "2026-09-28T02:00:00.000Z",
+    );
+    await expect(
+      adapter.fetchJobDetails(company, jobs[0]!),
+    ).resolves.toMatchObject({
+      description: "<p>Build distributed software.</p>",
+    });
+  });
+
   it("extracts requisition IDs for clear invalid-detail errors", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(`
       <html><body>

@@ -13,6 +13,8 @@ interface SuccessFactorsListing {
   title: string;
   location: string | null;
   url: string;
+  postedAt: Date | null;
+  description: string | null;
 }
 
 interface SuccessFactorsSearchPage {
@@ -33,9 +35,11 @@ const USER_AGENT =
   "Chrome/126.0.0.0 Safari/537.36";
 
 export class SuccessFactorsAdapter implements JobAdapter {
+  private readonly descriptionCache = new Map<string, string>();
+
   async fetchJobSummaries(
     company: CompanyConfig,
-    _query?: JobSummaryQuery,
+    query?: JobSummaryQuery,
   ): Promise<JobSummary[]> {
     assertSuccessFactorsCompany(company);
 
@@ -50,7 +54,7 @@ export class SuccessFactorsAdapter implements JobAdapter {
     while (pageUrl && !visitedPages.has(pageUrl.toString())) {
       visitedPages.add(pageUrl.toString());
       const html = await fetchHtml(company, pageUrl);
-      const page = parseSearchPage(html, pageUrl);
+      const page = parseSearchPayload(html, pageUrl);
 
       for (const listing of page.listings) {
         if (seenJobIds.has(listing.jobId)) {
@@ -59,22 +63,36 @@ export class SuccessFactorsAdapter implements JobAdapter {
 
         seenJobIds.add(listing.jobId);
         listings.push(listing);
+
+        if (listing.description) {
+          this.descriptionCache.set(
+            cacheKey(company.id, listing.jobId),
+            listing.description,
+          );
+        }
       }
 
       pageUrl = page.nextUrl;
     }
 
-    return listings.map((listing) => ({
-      companyId: company.id,
-      companyName: company.name,
-      jobId: listing.jobId,
-      title: listing.title,
-      location: listing.location,
-      url: listing.url,
-      postedAt: null,
-      updatedAt: null,
-      source: "successfactors",
-    }));
+    return listings
+      .filter(
+        (listing) =>
+          !query?.postedAfter ||
+          !listing.postedAt ||
+          listing.postedAt >= query.postedAfter,
+      )
+      .map((listing) => ({
+        companyId: company.id,
+        companyName: company.name,
+        jobId: listing.jobId,
+        title: listing.title,
+        location: listing.location,
+        url: listing.url,
+        postedAt: listing.postedAt,
+        updatedAt: null,
+        source: "successfactors" as const,
+      }));
   }
 
   async fetchJobDetails(
@@ -82,6 +100,17 @@ export class SuccessFactorsAdapter implements JobAdapter {
     job: JobSummary,
   ): Promise<JobDetails> {
     assertSuccessFactorsCompany(company);
+
+    const cachedDescription = this.descriptionCache.get(
+      cacheKey(company.id, job.jobId),
+    );
+
+    if (cachedDescription) {
+      return {
+        ...job,
+        description: cachedDescription,
+      };
+    }
 
     const html = await fetchHtml(company, new URL(job.url));
     const details = parseDetailPage(html);
@@ -102,6 +131,15 @@ export class SuccessFactorsAdapter implements JobAdapter {
       description: details.description,
     };
   }
+}
+
+function parseSearchPayload(
+  payload: string,
+  pageUrl: URL,
+): SuccessFactorsSearchPage {
+  return /^\s*<\?xml|^\s*<rss\b/i.test(payload)
+    ? parseRssFeed(payload, pageUrl)
+    : parseSearchPage(payload, pageUrl);
 }
 
 function assertSuccessFactorsCompany(
@@ -185,6 +223,8 @@ function parseSearchPage(
       title,
       location: locationText || null,
       url: url.toString(),
+      postedAt: null,
+      description: null,
     });
   });
 
@@ -192,6 +232,73 @@ function parseSearchPage(
     listings,
     nextUrl: findNextPageUrl($, pageUrl),
   };
+}
+
+function parseRssFeed(
+  xml: string,
+  pageUrl: URL,
+): SuccessFactorsSearchPage {
+  const $ = load(xml, { xmlMode: true });
+  const listings: SuccessFactorsListing[] = [];
+
+  $("channel > item").each((_, element) => {
+    const item = $(element);
+    const rawTitle = normalizeText(item.find("title").first().text());
+    const href = normalizeText(item.find("link").first().text());
+
+    if (!rawTitle || !href) {
+      return;
+    }
+
+    const url = new URL(href, pageUrl);
+    url.search = "";
+    const jobId = jobIdFromUrl(url);
+
+    if (!jobId) {
+      return;
+    }
+
+    const { title, location } = splitRssTitle(rawTitle);
+    const description = item.find("description").first().text().trim();
+
+    listings.push({
+      jobId,
+      title,
+      location,
+      url: url.toString(),
+      postedAt: parseRssDate(item.find("pubDate").first().text()),
+      description: description || null,
+    });
+  });
+
+  return { listings, nextUrl: null };
+}
+
+function splitRssTitle(value: string): {
+  title: string;
+  location: string | null;
+} {
+  const match = value.match(/\s+\(([^()]*(?:\bUS\b|\bUSA\b|United States)[^()]*)\)\s*$/i);
+
+  if (!match?.[1]) {
+    return { title: value, location: null };
+  }
+
+  return {
+    title: value.slice(0, match.index).trim(),
+    location: normalizeText(match[1]),
+  };
+}
+
+function parseRssDate(value: string): Date | null {
+  const normalized = normalizeText(value);
+
+  if (!normalized) {
+    return null;
+  }
+
+  const parsed = new Date(normalized);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
 
 function findNextPageUrl($: CheerioAPI, pageUrl: URL): URL | null {
@@ -355,4 +462,8 @@ function normalizeLabel(value: string): string {
 
 function ensureTrailingSlash(value: string): string {
   return value.endsWith("/") ? value : `${value}/`;
+}
+
+function cacheKey(companyId: string, jobId: string): string {
+  return `${companyId}:${jobId}`;
 }

@@ -7,6 +7,7 @@ const SUPPORTED_ADAPTERS = new Set<CompanyConfig["adapter"]>([
   "bytedance",
   "eightfold",
   "greenhouse",
+  "icims",
   "lever",
   "oracle",
   "smartrecruiters",
