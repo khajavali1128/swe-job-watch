@@ -16,6 +16,12 @@ export const JobValidationResultSchema = z
     excludedEmploymentType: z.boolean(),
     sponsorshipEligible: z.boolean(),
     citizenshipRequired: z.boolean(),
+    hiringContactName: z.string().trim().min(1).nullable(),
+    hiringContactEmail: z
+      .string()
+      .trim()
+      .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)
+      .nullable(),
     requiredYears: z.number().nonnegative().nullable(),
     experienceStatus: z.enum([
       "WITHIN_LIMIT",
@@ -43,6 +49,8 @@ delete (responseJsonSchema as Record<string, unknown>).$schema;
   "excludedEmploymentType",
   "sponsorshipEligible",
   "citizenshipRequired",
+  "hiringContactName",
+  "hiringContactEmail",
   "requiredYears",
   "experienceStatus",
   "decision",
@@ -71,6 +79,7 @@ Rules:
 - Employment type: apply the configured included and excluded employment types.
 - Sponsorship: when rejectNegativeStatements is true, set sponsorshipEligible to false if the description explicitly says sponsorship or immigration support is unavailable. This includes wording such as "no sponsorship," "will not/cannot/unable to sponsor," "must be authorized to work without current or future sponsorship," or no support for visa programs such as H-1B, OPT, or CPT. Positive sponsorship language and descriptions that do not mention sponsorship should set sponsorshipEligible to true. Do not interpret a neutral reference to work authorization as a negative restriction unless it excludes sponsorship or immigration support.
 - Citizenship: set citizenshipRequired to true when the job explicitly requires U.S. citizenship, says the applicant must be a U.S. citizen, or mandates an active U.S. government security clearance or eligibility to obtain and maintain one. When rejectCitizenshipRequirements is true, any such requirement is a hard rejection. Do not set citizenshipRequired merely because the role supports a federal customer, mentions a background check or Public Trust review without a citizenship restriction, or contains equal-employment language about citizenship status.
+- Hiring contact: extract hiringContactName and hiringContactEmail only when the description explicitly identifies a recruiter, hiring manager, talent-acquisition contact, or role/team contact, or explicitly invites candidates to send a resume or role-specific questions to that person or address. Never infer or fabricate a contact. Set absent values to null. Exclude addresses used for accommodations, disability/accessibility requests, privacy, legal notices, security or fraud reports, technical support, application-status support, equal-opportunity notices, and no-reply mailboxes.
 - Location: apply the configured U.S. rules. Accept eligible U.S. locations, U.S.-remote roles, and allowed multi-location roles containing a U.S. location. Reject exclusively non-U.S. roles. Do not invent U.S. eligibility.
 - Decision: return REJECTED if roleMatch is false, usEligible is false, any excluded flag is true, sponsorshipEligible is false while rejectNegativeStatements is true, citizenshipRequired is true while rejectCitizenshipRequirements is true, experienceStatus is OVER_LIMIT, or experienceStatus is NOT_SPECIFIED while acceptWhenNotSpecified is false. Return QUALIFIED only when none of those conditions applies.
 - Reasons: provide short, factual reasons for the decision, not an essay.
@@ -256,7 +265,7 @@ function applyDeterministicRestrictions(
   result: JobValidationResult,
   filters: FiltersConfig,
 ): JobValidationResult {
-  let guardedResult = result;
+  let guardedResult = removeUnsupportedHiringContact(job, result);
 
   if (
     filters.sponsorship.rejectCitizenshipRequirements &&
@@ -292,6 +301,29 @@ function applyDeterministicRestrictions(
   }
 
   return guardedResult;
+}
+
+function removeUnsupportedHiringContact(
+  job: JobDetails,
+  result: JobValidationResult,
+): JobValidationResult {
+  const descriptionText = load(job.description).text().toLowerCase();
+  const hiringContactName =
+    result.hiringContactName &&
+      descriptionText.includes(result.hiringContactName.toLowerCase())
+      ? result.hiringContactName
+      : null;
+  const hiringContactEmail =
+    result.hiringContactEmail &&
+      descriptionText.includes(result.hiringContactEmail.toLowerCase())
+      ? result.hiringContactEmail
+      : null;
+
+  return {
+    ...result,
+    hiringContactName,
+    hiringContactEmail,
+  };
 }
 
 function findMandatoryExperienceYears(description: string): number | null {

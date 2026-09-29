@@ -503,7 +503,7 @@ companies:
 - id: amplitude
   name: Amplitude
   enabled: true
-  adapter: greenhouse
+  adapter: ashby
   handle: amplitude
 - id: cursor
   name: Cursor
@@ -1016,3 +1016,20 @@ companies:
   apiBaseUrl: https://humana.wd5.myworkdayjobs.com
   tenant: humana
   handle: Humana_External_Career_Site
+- id: ge-healthcare
+  name: GE HealthCare
+  enabled: true
+  adapter: workday
+  apiBaseUrl: https://gehc.wd5.myworkdayjobs.com
+  tenant: gehc
+  handle: GEHC_ExternalSite
+- id: pave
+  name: Pave
+  enabled: true
+  adapter: greenhouse
+  handle: paveakatroveinformationtechnologies
+- id: roku
+  name: Roku
+  enabled: true
+  adapter: greenhouse
+  handle: roku

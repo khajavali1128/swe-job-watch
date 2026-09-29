@@ -57,7 +57,7 @@ const qualifiedJob: QualifiedJob = {
     postedAt: new Date("2026-09-13T18:00:00.000Z"),
     updatedAt: null,
     source: "greenhouse",
-    description: "Build software platforms.",
+    description: "Contact Taylor Recruiter at talent@example.com.",
   },
   validation: {
     roleMatch: true,
@@ -67,6 +67,8 @@ const qualifiedJob: QualifiedJob = {
     excludedEmploymentType: false,
     sponsorshipEligible: true,
     citizenshipRequired: false,
+    hiringContactName: "Taylor Recruiter",
+    hiringContactEmail: "talent@example.com",
     requiredYears: null,
     experienceStatus: "NOT_SPECIFIED",
     decision: "QUALIFIED",
@@ -96,7 +98,7 @@ beforeEach(() => {
 describe("GoogleSheetsJobStore", () => {
   it("appends jobs directly after the existing rows", async () => {
     valuesAppend.mockResolvedValue({
-      data: { updates: { updatedRange: "'Jobs'!A3:F3" } },
+      data: { updates: { updatedRange: "'Jobs'!A3:H3" } },
     });
     valuesGet
       .mockResolvedValueOnce({
@@ -108,6 +110,8 @@ describe("GoogleSheetsJobStore", () => {
             "Posted Date",
             "H1B Rank",
             "Tag",
+            "Contact Name",
+            "Contact Email",
           ]],
         },
       })
@@ -127,7 +131,7 @@ describe("GoogleSheetsJobStore", () => {
     expect(result).toEqual({ appended: 1, duplicates: 0 });
     expect(valuesAppend).toHaveBeenCalledWith(
       expect.objectContaining({
-        range: "'Jobs'!A:F",
+        range: "'Jobs'!A:H",
         requestBody: {
           values: [
             [
@@ -137,6 +141,8 @@ describe("GoogleSheetsJobStore", () => {
               "2026-09-13",
               23,
               "",
+              "Taylor Recruiter",
+              "talent@example.com",
             ],
           ],
         },
@@ -153,7 +159,7 @@ describe("GoogleSheetsJobStore", () => {
                 startRowIndex: 2,
                 endRowIndex: 3,
                 startColumnIndex: 0,
-                endColumnIndex: 6,
+                endColumnIndex: 8,
               },
               cell: {
                 userEnteredFormat: {
@@ -185,6 +191,8 @@ describe("GoogleSheetsJobStore", () => {
             "Posted Date",
             "H1B Rank",
             "Tag",
+            "Contact Name",
+            "Contact Email",
           ]],
         },
       })
@@ -213,7 +221,7 @@ describe("GoogleSheetsJobStore", () => {
   it("appends a blank rank when the ranking lookup is unavailable", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     valuesAppend.mockResolvedValue({
-      data: { updates: { updatedRange: "'Jobs'!A2:F2" } },
+      data: { updates: { updatedRange: "'Jobs'!A2:H2" } },
     });
     valuesGet
       .mockResolvedValueOnce({
@@ -225,6 +233,8 @@ describe("GoogleSheetsJobStore", () => {
             "Posted Date",
             "H1B Rank",
             "Tag",
+            "Contact Name",
+            "Contact Email",
           ]],
         },
       })
@@ -246,6 +256,8 @@ describe("GoogleSheetsJobStore", () => {
             "2026-09-13",
             "",
             "",
+            "Taylor Recruiter",
+            "talent@example.com",
           ]],
         },
       }),
@@ -267,7 +279,7 @@ describe("GoogleSheetsJobStore", () => {
 
     expect(valuesUpdate).toHaveBeenCalledWith({
       spreadsheetId: "sheet-id",
-      range: "'Jobs'!A1:F1",
+      range: "'Jobs'!A1:H1",
       valueInputOption: "RAW",
       requestBody: {
         values: [[
@@ -277,6 +289,8 @@ describe("GoogleSheetsJobStore", () => {
           "Posted Date",
           "H1B Rank",
           "Tag",
+          "Contact Name",
+          "Contact Email",
         ]],
       },
     });

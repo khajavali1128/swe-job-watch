@@ -37,6 +37,8 @@ const HEADERS = [
   "Posted Date",
   "H1B Rank",
   "Tag",
+  "Contact Name",
+  "Contact Email",
 ];
 const H1B_RANKINGS_TAB = "H1B Rankings";
 const PROCESSED_JOBS_TAB = "Processed Jobs";
@@ -108,18 +110,20 @@ export class GoogleSheetsJobStore {
     }
 
     const companyRankings = await this.loadCompanyRankings();
-    const rows = newRecords.map(({ job }) => [
+    const rows = newRecords.map(({ job, validation }) => [
       job.companyName,
       job.url,
       job.title,
       formatPostedDate(job.postedAt),
       companyRankings.get(job.companyId) ?? "",
       "",
+      validation.hiringContactName ?? "",
+      validation.hiringContactEmail ?? "",
     ]);
 
     const appendResponse = await this.sheets.spreadsheets.values.append({
       spreadsheetId: this.config.spreadsheetId,
-      range: `${sheetName(sheetTab)}!A:F`,
+      range: `${sheetName(sheetTab)}!A:H`,
       valueInputOption: "USER_ENTERED",
       insertDataOption: "INSERT_ROWS",
       requestBody: { values: rows },
@@ -210,7 +214,7 @@ export class GoogleSheetsJobStore {
   }
 
   private async ensureHeaders(): Promise<void> {
-    const range = `${sheetName(await this.resolveSheetTab())}!A1:F1`;
+    const range = `${sheetName(await this.resolveSheetTab())}!A1:H1`;
     const response = await this.sheets.spreadsheets.values.get({
       spreadsheetId: this.config.spreadsheetId,
       range,

@@ -50,6 +50,10 @@ const job: JobDetails = {
   source: "greenhouse",
   description: "Requires 5 years of professional experience.",
 };
+const noHiringContact = {
+  hiringContactName: null,
+  hiringContactEmail: null,
+};
 
 describe("validateJobWithGemini", () => {
   it("rejects a decision that contradicts an over-limit experience result", async () => {
@@ -63,6 +67,7 @@ describe("validateJobWithGemini", () => {
         excludedEmploymentType: false,
         sponsorshipEligible: true,
         citizenshipRequired: false,
+        ...noHiringContact,
         requiredYears: 5,
         experienceStatus: "OVER_LIMIT",
         reasons: ["Five years required."],
@@ -85,6 +90,7 @@ describe("validateJobWithGemini", () => {
         excludedEmploymentType: false,
         sponsorshipEligible: true,
         citizenshipRequired: false,
+        ...noHiringContact,
         requiredYears: 5,
         experienceStatus: "OVER_LIMIT",
         reasons: ["Five years required."],
@@ -109,6 +115,7 @@ describe("validateJobWithGemini", () => {
         excludedEmploymentType: false,
         sponsorshipEligible: false,
         citizenshipRequired: false,
+        ...noHiringContact,
         requiredYears: 2,
         experienceStatus: "WITHIN_LIMIT",
         reasons: ["The employer does not provide visa sponsorship."],
@@ -131,6 +138,7 @@ describe("validateJobWithGemini", () => {
         excludedEmploymentType: false,
         sponsorshipEligible: false,
         citizenshipRequired: false,
+        ...noHiringContact,
         requiredYears: 2,
         experienceStatus: "WITHIN_LIMIT",
         reasons: ["The employer does not provide visa sponsorship."],
@@ -154,6 +162,7 @@ describe("validateJobWithGemini", () => {
         excludedEmploymentType: false,
         sponsorshipEligible: true,
         citizenshipRequired: true,
+        ...noHiringContact,
         requiredYears: 2,
         experienceStatus: "WITHIN_LIMIT",
         reasons: ["The role requires U.S. citizenship."],
@@ -184,6 +193,7 @@ describe("validateJobWithGemini", () => {
         excludedEmploymentType: false,
         sponsorshipEligible: true,
         citizenshipRequired: true,
+        ...noHiringContact,
         requiredYears: 2,
         experienceStatus: "WITHIN_LIMIT",
         reasons: ["The role requires U.S. citizenship."],
@@ -209,6 +219,7 @@ describe("validateJobWithOpenAI", () => {
         excludedEmploymentType: false,
         sponsorshipEligible: true,
         citizenshipRequired: false,
+        ...noHiringContact,
         requiredYears: 2,
         experienceStatus: "WITHIN_LIMIT",
         reasons: ["The role otherwise satisfies the configured rules."],
@@ -231,6 +242,7 @@ describe("validateJobWithOpenAI", () => {
         excludedEmploymentType: false,
         sponsorshipEligible: true,
         citizenshipRequired: false,
+        ...noHiringContact,
         requiredYears: 2,
         experienceStatus: "WITHIN_LIMIT",
         reasons: ["The role otherwise satisfies the configured rules."],
@@ -266,6 +278,7 @@ describe("validateJobWithOpenAI", () => {
         excludedEmploymentType: false,
         sponsorshipEligible: true,
         citizenshipRequired: false,
+        ...noHiringContact,
         requiredYears: null,
         experienceStatus: "NOT_SPECIFIED",
         reasons: ["No mandatory experience requirement was identified."],
@@ -305,6 +318,7 @@ describe("validateJobWithOpenAI", () => {
         excludedEmploymentType: false,
         sponsorshipEligible: true,
         citizenshipRequired: false,
+        ...noHiringContact,
         requiredYears: 2,
         experienceStatus: "WITHIN_LIMIT",
         reasons: ["Two years of experience are required."],
@@ -326,6 +340,69 @@ describe("validateJobWithOpenAI", () => {
       decision: "QUALIFIED",
       requiredYears: 2,
       experienceStatus: "WITHIN_LIMIT",
+    });
+  });
+
+  it("keeps an explicitly stated hiring contact", async () => {
+    parseOpenAIResponse.mockResolvedValue({
+      output_parsed: {
+        decision: "QUALIFIED",
+        roleMatch: true,
+        usEligible: true,
+        excludedSeniority: false,
+        excludedDomain: false,
+        excludedEmploymentType: false,
+        sponsorshipEligible: true,
+        citizenshipRequired: false,
+        hiringContactName: "Taylor Recruiter",
+        hiringContactEmail: "talent@example.com",
+        requiredYears: null,
+        experienceStatus: "NOT_SPECIFIED",
+        reasons: ["The role satisfies the configured rules."],
+      },
+    });
+    const contactJob = {
+      ...job,
+      description:
+        "Contact recruiter Taylor Recruiter at talent@example.com about this role.",
+    };
+
+    await expect(
+      validateJobWithOpenAI(contactJob, filters),
+    ).resolves.toMatchObject({
+      hiringContactName: "Taylor Recruiter",
+      hiringContactEmail: "talent@example.com",
+    });
+  });
+
+  it("removes hiring contacts unsupported by the description", async () => {
+    parseOpenAIResponse.mockResolvedValue({
+      output_parsed: {
+        decision: "QUALIFIED",
+        roleMatch: true,
+        usEligible: true,
+        excludedSeniority: false,
+        excludedDomain: false,
+        excludedEmploymentType: false,
+        sponsorshipEligible: true,
+        citizenshipRequired: false,
+        hiringContactName: "Invented Recruiter",
+        hiringContactEmail: "invented@example.com",
+        requiredYears: null,
+        experienceStatus: "NOT_SPECIFIED",
+        reasons: ["The role satisfies the configured rules."],
+      },
+    });
+    const noContactJob = {
+      ...job,
+      description: "Build and maintain software services.",
+    };
+
+    await expect(
+      validateJobWithOpenAI(noContactJob, filters),
+    ).resolves.toMatchObject({
+      hiringContactName: null,
+      hiringContactEmail: null,
     });
   });
 });
