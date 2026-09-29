@@ -117,6 +117,121 @@ describe("AvatureAdapter", () => {
     );
     expect(details.description).not.toContain("General Information");
   });
+
+  it("supports scoped searches and numeric-only Avature job URLs", async () => {
+    const siemens: CompanyConfig = {
+      id: "siemens",
+      name: "Siemens",
+      enabled: true,
+      adapter: "avature",
+      handle: "en_US/externaljobs",
+      apiBaseUrl: "https://jobs.siemens.com",
+      searchTerms: ["software engineer United States"],
+    };
+    const searchHtml = `
+      <article class="article article--result">
+        <h3 class="article__header__text__title">
+          <a href="/en_US/externaljobs/JobDetail/524087">Software Developer</a>
+        </h3>
+        <span class="location">Chicago, Illinois, United States</span>
+      </article>
+      <li class="paginationNextLink">
+        <a href="/en_US/externaljobs/SearchJobs/software%20engineer%20United%20States?folderOffset=6">Next</a>
+      </li>
+    `;
+    const fetchMock = vi.fn().mockImplementation(
+      () => Promise.resolve(new Response(searchHtml)),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const jobs = await new AvatureAdapter().fetchJobSummaries(siemens);
+
+    expect(jobs).toHaveLength(1);
+    expect(jobs[0]).toMatchObject({
+      jobId: "524087",
+      title: "Software Developer",
+      location: "Chicago, Illinois, United States",
+    });
+    const firstUrl = new URL(String(fetchMock.mock.calls[0]?.[0]));
+    expect(firstUrl.pathname).toBe(
+      "/en_US/externaljobs/SearchJobs/software%20engineer%20United%20States",
+    );
+    expect(firstUrl.searchParams.get("folderOffset")).toBe("0");
+  });
+
+  it("recognizes the Posted since detail label", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-28T20:00:00.000Z"));
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(`
+      <article class="article article--details">
+        ${detailField("Posted since", "28-Sep-2026")}
+      </article>
+      <article class="article article--details">
+        <h3 class="article__header__text__title">Job Description</h3>
+        <div class="article__content"><p>Build reliable software.</p></div>
+      </article>
+    `)));
+
+    const details = await new AvatureAdapter().fetchJobDetails(company, {
+      companyId: "synopsys",
+      companyName: "Synopsys",
+      jobId: "524087",
+      title: "Software Developer",
+      location: null,
+      url: "https://jobs.siemens.com/en_US/externaljobs/JobDetail/524087",
+      postedAt: null,
+      updatedAt: null,
+      source: "avature",
+    });
+
+    expect(details.postedAt?.toISOString()).toBe(
+      "2026-09-28T20:00:00.000Z",
+    );
+  });
+
+  it("hydrates missing listing dates before applying the freshness cutoff", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-28T20:00:00.000Z"));
+    const siemens: CompanyConfig = {
+      id: "siemens",
+      name: "Siemens",
+      enabled: true,
+      adapter: "avature",
+      handle: "en_US/externaljobs",
+      apiBaseUrl: "https://jobs.siemens.com",
+      searchTerms: ["software United States"],
+      hydrateListingDates: true,
+    };
+    const fetchMock = vi.fn().mockImplementation((input: string | URL) => {
+      const url = String(input);
+
+      if (url.includes("/JobDetail/524087")) {
+        return Promise.resolve(new Response(detailPage("28-Sep-2026")));
+      }
+
+      if (url.includes("/JobDetail/523000")) {
+        return Promise.resolve(new Response(detailPage("26-Sep-2026")));
+      }
+
+      return Promise.resolve(new Response(`
+        <article class="article article--result">
+          <h3><a href="/en_US/externaljobs/JobDetail/524087">Software Developer</a></h3>
+        </article>
+        <article class="article article--result">
+          <h3><a href="/en_US/externaljobs/JobDetail/523000">Software Engineer</a></h3>
+        </article>
+        <li class="paginationNextLink"><a href="?folderOffset=2">Next</a></li>
+      `));
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const jobs = await new AvatureAdapter().fetchJobSummaries(siemens, {
+      postedAfter: new Date("2026-09-28T00:00:00.000Z"),
+    });
+
+    expect(jobs.map(({ jobId }) => jobId)).toEqual(["524087"]);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
 });
 
 function listing(jobId: string, title: string, date: string): string {
@@ -146,5 +261,17 @@ function detailField(label: string, value: string): string {
       <div class="article__content__view__field__label">${label}</div>
       <div class="article__content__view__field__value">${value}</div>
     </div>
+  `;
+}
+
+function detailPage(date: string): string {
+  return `
+    <article class="article article--details">
+      ${detailField("Posted since", date)}
+    </article>
+    <article class="article article--details">
+      <h3 class="article__header__text__title">Job Description</h3>
+      <div class="article__content"><p>Build reliable software.</p></div>
+    </article>
   `;
 }

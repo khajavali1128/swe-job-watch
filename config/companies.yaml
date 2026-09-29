@@ -1065,3 +1065,91 @@ companies:
   apiBaseUrl: https://pwc.wd3.myworkdayjobs.com
   tenant: pwc
   handle: US_Experienced_Careers
+- id: johns-hopkins-university
+  name: Johns Hopkins University
+  enabled: true
+  adapter: eightfold
+  handle: jhu.edu
+  apiBaseUrl: https://hiring.jhu.edu
+- id: ltts
+  name: L&T Technology Services
+  enabled: true
+  adapter: successfactors
+  apiBaseUrl: https://jobs.ltts.com
+  searchPath: /services/rss/job/?locale=en_US&keywords=(software)%20AND%20locationSearch:(United%20States)
+- id: barclays
+  name: Barclays
+  enabled: true
+  adapter: workday
+  apiBaseUrl: https://barclays.wd3.myworkdayjobs.com
+  tenant: barclays
+  handle: external_career_site_barclays
+- id: university-of-pennsylvania
+  name: University of Pennsylvania
+  enabled: true
+  adapter: workday
+  apiBaseUrl: https://upenn.wd1.myworkdayjobs.com
+  tenant: upenn
+  handle: careers-at-penn
+- id: washington-university
+  name: Washington University in St. Louis
+  enabled: true
+  adapter: workday
+  apiBaseUrl: https://wustl.wd1.myworkdayjobs.com
+  tenant: wustl
+  handle: External
+- id: fiserv
+  name: Fiserv
+  enabled: true
+  adapter: workday
+  apiBaseUrl: https://fiserv.wd5.myworkdayjobs.com
+  tenant: fiserv
+  handle: EXT
+- id: rivian
+  name: Rivian
+  enabled: true
+  adapter: icims
+  apiBaseUrl: https://careers.rivian.com
+  handle: careers-home
+- id: stanford-university
+  name: Stanford University
+  enabled: true
+  adapter: oracle
+  handle: Stanford
+  apiBaseUrl: https://careersearch.stanford.edu
+  siteNumber: Stanford
+  publicJobBaseUrl: https://careersearch.stanford.edu/hcmUI/CandidateExperience/en/sites/Stanford/job
+- id: synechron
+  name: Synechron
+  enabled: true
+  adapter: workday
+  apiBaseUrl: https://synechron.wd1.myworkdayjobs.com
+  tenant: synechron
+  handle: SynechronCareers
+- id: versant
+  name: Versant
+  enabled: true
+  adapter: smartrecruiters
+  handle: Versant3
+- id: booking
+  name: Booking.com
+  enabled: true
+  adapter: icims
+  apiBaseUrl: https://jobs.booking.com
+  handle: booking
+- id: siemens
+  name: Siemens
+  enabled: true
+  adapter: avature
+  apiBaseUrl: https://jobs.siemens.com
+  handle: en_US/externaljobs
+  searchTerms:
+    - software engineer United States
+    - software developer United States
+  hydrateListingDates: true
+- id: docusign
+  name: DocuSign
+  enabled: true
+  adapter: icims
+  apiBaseUrl: https://careers.docusign.com
+  handle: careers-home

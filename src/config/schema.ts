@@ -60,6 +60,8 @@ export const AvatureCompanySchema = z
     adapter: z.literal("avature"),
     handle: nonEmptyString,
     apiBaseUrl: urlString,
+    searchTerms: nonEmptyStringArray.min(1).optional(),
+    hydrateListingDates: z.boolean().optional(),
   })
   .strict();
 

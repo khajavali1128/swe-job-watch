@@ -43,6 +43,8 @@ const MONTHS: Record<string, number> = {
 };
 
 export class AvatureAdapter implements JobAdapter {
+  private readonly detailHtmlByUrl = new Map<string, string>();
+
   async fetchJobSummaries(
     company: CompanyConfig,
     query?: JobSummaryQuery,
@@ -52,48 +54,69 @@ export class AvatureAdapter implements JobAdapter {
     const now = new Date();
     const listings: AvatureListing[] = [];
     const seenJobIds = new Set<string>();
-    const seenOffsets = new Set<number>();
-    let offset = 0;
+    const searchTerms = company.searchTerms ?? [undefined];
 
-    for (let pageNumber = 0; pageNumber < MAX_PAGES; pageNumber += 1) {
-      if (seenOffsets.has(offset)) {
-        break;
-      }
+    for (const searchTerm of searchTerms) {
+      const seenOffsets = new Set<number>();
+      let offset = 0;
 
-      seenOffsets.add(offset);
-      const url = searchUrl(company, offset);
-      const html = await fetchHtml(company, url);
-      const page = parseSearchPage(html, portalUrl(company), now);
-      const newListings = page.listings.filter((listing) => {
-        if (seenJobIds.has(listing.jobId)) {
-          return false;
+      for (let pageNumber = 0; pageNumber < MAX_PAGES; pageNumber += 1) {
+        if (seenOffsets.has(offset)) {
+          break;
         }
 
-        seenJobIds.add(listing.jobId);
-        return true;
-      });
+        seenOffsets.add(offset);
+        const url = searchUrl(company, offset, searchTerm);
+        const html = await fetchHtml(company, url);
+        const page = parseSearchPage(html, portalUrl(company), now);
 
-      listings.push(...newListings);
+        if (company.hydrateListingDates) {
+          await Promise.all(
+            page.listings.map(async (listing) => {
+              if (listing.postedAt) {
+                return;
+              }
 
-      if (page.listings.length > 0 && newListings.length === 0) {
-        break;
+              const detailHtml = await fetchHtml(company, new URL(listing.url));
+              this.detailHtmlByUrl.set(listing.url, detailHtml);
+              listing.postedAt = detailPostingDate(
+                extractDetailFields(load(detailHtml)),
+                now,
+              );
+            }),
+          );
+        }
+        const newListings = page.listings.filter((listing) => {
+          if (seenJobIds.has(listing.jobId)) {
+            return false;
+          }
+
+          seenJobIds.add(listing.jobId);
+          return true;
+        });
+
+        listings.push(...newListings);
+
+        if (page.listings.length > 0 && newListings.length === 0) {
+          break;
+        }
+
+        if (reachedPostingCutoff(page.listings, query?.postedAfter)) {
+          break;
+        }
+
+        if (!page.hasNext || page.listings.length === 0) {
+          break;
+        }
+
+        const nextOffset = page.nextOffset ?? offset + page.listings.length;
+
+        if (nextOffset <= offset) {
+          break;
+        }
+
+        offset = nextOffset;
       }
-
-      if (reachedPostingCutoff(page.listings, query?.postedAfter)) {
-        break;
-      }
-
-      if (!page.hasNext || page.listings.length === 0) {
-        break;
-      }
-
-      const nextOffset = page.nextOffset ?? offset + page.listings.length;
-
-      if (nextOffset <= offset) {
-        break;
-      }
-
-      offset = nextOffset;
     }
 
     return listings
@@ -122,7 +145,8 @@ export class AvatureAdapter implements JobAdapter {
   ): Promise<JobDetails> {
     assertAvatureCompany(company);
 
-    const html = await fetchHtml(company, new URL(job.url));
+    const html = this.detailHtmlByUrl.get(job.url) ??
+      await fetchHtml(company, new URL(job.url));
     const $ = load(html);
     const fields = extractDetailFields($);
     const description = extractDescription($);
@@ -217,7 +241,7 @@ function parseSearchPage(
     });
   });
 
-  const nextLink = $("a.paginationNextLink").first();
+  const nextLink = $("a.paginationNextLink, .paginationNextLink a").first();
   const nextHref = nextLink.attr("href");
 
   return {
@@ -384,6 +408,7 @@ function detailPostingDate(
     "date posted",
     "posted date",
     "posting date",
+    "posted since",
   ]);
   return value ? parseDateOnly(value, now) : null;
 }
@@ -478,19 +503,38 @@ function reachedPostingCutoff(
 }
 
 function jobIdFromUrl(url: URL): string | null {
-  return /\/JobDetail\/[^/?#]+\/(\d+)(?:[/?#]|$)/i.exec(url.pathname)?.[1] ??
-    null;
+  return /\/JobDetail\/(?:[^/?#]+\/)?(\d+)(?:[/?#]|$)/i.exec(
+    url.pathname,
+  )?.[1] ?? null;
 }
 
 function parseOffset(url: URL): number | null {
   const value = url.searchParams.get("jobOffset") ??
+    url.searchParams.get("folderOffset") ??
     url.searchParams.get("offset");
   const parsed = value === null ? Number.NaN : Number(value);
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : null;
 }
 
-function searchUrl(company: AvatureCompanyConfig, offset: number): URL {
-  const url = new URL(`${portalUrl(company).toString()}/SearchJobs`);
+function searchUrl(
+  company: AvatureCompanyConfig,
+  offset: number,
+  searchTerm?: string,
+): URL {
+  const searchPath = searchTerm
+    ? `/SearchJobs/${encodeURIComponent(searchTerm)}`
+    : "/SearchJobs";
+  const url = new URL(`${portalUrl(company).toString()}${searchPath}`);
+
+  if (searchTerm) {
+    url.searchParams.set("listFilterMode", "1");
+    url.searchParams.set("folderSort", "postedDate");
+    url.searchParams.set("folderSortDirection", "DESC");
+    url.searchParams.set("folderRecordsPerPage", "6");
+    url.searchParams.set("folderOffset", String(offset));
+    return url;
+  }
+
   url.searchParams.set("jobSort", "postedDate");
   url.searchParams.set("jobSortDirection", "DESC");
   url.searchParams.set("jobOffset", String(offset));
