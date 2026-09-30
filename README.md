@@ -2,7 +2,7 @@
 
 SWE Job Watch is a scheduled Node.js and TypeScript service that scans public ATS job boards, filters recently opened U.S. software-engineering roles, validates full job descriptions with AI, and appends qualified jobs to Google Sheets.
 
-The production service currently checks 193 enabled companies across Apple Careers, Ashby, Avature, ByteDance's public supplier API, Eightfold, Greenhouse, iCIMS Jibe, Lever, SmartRecruiters, SuccessFactors, Oracle Recruiting, and Workday.
+The production service currently checks 194 enabled companies across Apple Careers, Ashby, Avature, ByteDance's public supplier API, Eightfold, Greenhouse, iCIMS Jibe, Lever, SmartRecruiters, SuccessFactors, Oracle Recruiting, and Workday.
 
 ## Workflow
 
@@ -74,6 +74,7 @@ All editable qualification rules live in [`config/filters.yaml`](config/filters.
 - Considers jobs posted within the last 200 hours.
 - Accepts U.S. locations, U.S.-remote roles, and multi-location roles containing a U.S. location.
 - Requires a configured software-development title match.
+- Does not treat the bare word `software` as sufficient role evidence and rejects administrator, desk-side, help-desk, and desktop-support titles before AI validation.
 - Normalizes punctuation and whitespace, so titles such as `Full-Stack Engineer` match configured phrases such as `full stack engineer`.
 - Allows generic developer titles such as `Platform Developer` through the cheap stage for final AI validation.
 - Rejects excluded titles, seniority levels, and employment types during cheap filtering.

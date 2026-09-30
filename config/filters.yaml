@@ -29,7 +29,6 @@ roles:
     - distributed engineer
     - software developer
     - developer
-    - software
     - distributed systems
 
   excludeTitles:
@@ -44,6 +43,11 @@ roles:
     - firmware engineer
     - embedded software
     - robotics software
+    - administrator
+    - desk side
+    - desktop support
+    - help desk
+    - service desk
 
   excludeDomains:
     - robotics

@@ -63,6 +63,30 @@ describe("filterJobSummaries", () => {
     expect(filterJobSummaries([job], filters, NOW)).toHaveLength(1);
   });
 
+  it("rejects administrator and desk-side roles with incidental software text", () => {
+    const jobs = [
+      makeJob({
+        jobId: "hcltech-desk-side",
+        title:
+          "Senior Administrator-Desk Side Services, AMT-Asset Management Software",
+      }),
+      makeJob({
+        jobId: "desktop-support",
+        title: "Desktop Support Administrator - Software Services",
+      }),
+    ];
+
+    expect(filterJobSummaries(jobs, filters, NOW)).toHaveLength(0);
+  });
+
+  it("does not treat the bare word software as a development role", () => {
+    const job = makeJob({
+      title: "Asset Management Software Specialist",
+    });
+
+    expect(filterJobSummaries([job], filters, NOW)).toHaveLength(0);
+  });
+
   it("does not match engineer to engineering as a partial word", () => {
     const job = makeJob({
       title: "Site Reliability Engineering - Core Platform",

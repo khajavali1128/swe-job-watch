@@ -1153,3 +1153,8 @@ companies:
   adapter: icims
   apiBaseUrl: https://careers.docusign.com
   handle: careers-home
+- id: future-secure-ai
+  name: Future Secure AI
+  enabled: true
+  adapter: greenhouse
+  handle: futuresecureai
