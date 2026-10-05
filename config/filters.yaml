@@ -50,6 +50,8 @@ roles:
     - service desk
 
   excludeDomains:
+    - Salesforce platform development
+    - Workday platform development
     - robotics
     - autonomy
     - controls
