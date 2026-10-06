@@ -498,8 +498,8 @@ companies:
 - id: hightouch
   name: Hightouch
   enabled: true
-  adapter: greenhouse
-  handle: hightouch
+  adapter: ashby
+  handle: hightouch-inc
 - id: amplitude
   name: Amplitude
   enabled: true
