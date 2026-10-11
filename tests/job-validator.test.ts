@@ -176,7 +176,7 @@ describe("validateJobWithGemini", () => {
     expect(generateContent).toHaveBeenCalledWith(
       expect.objectContaining({
         contents: expect.stringContaining(
-          "mandates an active U.S. government security clearance",
+          "mandatory active U.S. government security clearance",
         ),
       }),
     );
@@ -264,6 +264,76 @@ describe("validateJobWithOpenAI", () => {
       reasons: expect.arrayContaining([
         "The role requires an active U.S. government security clearance.",
       ]),
+    });
+  });
+
+  it("asks AI to treat mandatory U.S. passport eligibility as a nationality restriction", async () => {
+    parseOpenAIResponse.mockResolvedValue({
+      output_parsed: {
+        decision: "REJECTED",
+        roleMatch: true,
+        usEligible: true,
+        excludedSeniority: false,
+        excludedDomain: false,
+        excludedEmploymentType: false,
+        sponsorshipEligible: true,
+        citizenshipRequired: true,
+        ...noHiringContact,
+        requiredYears: 2,
+        experienceStatus: "WITHIN_LIMIT",
+        reasons: ["The role requires a valid U.S. passport."],
+      },
+    });
+    const passportJob = {
+      ...job,
+      description: `
+        <p>Other Requirements:</p>
+        <ul><li>Willingness and ability to travel up to 20% of the time</li>
+        <li>Valid US Passport</li></ul>
+      `,
+    };
+
+    await expect(validateJobWithOpenAI(passportJob, filters)).resolves.toMatchObject({
+      decision: "REJECTED",
+      citizenshipRequired: true,
+      reasons: expect.arrayContaining([
+        "The role requires a valid U.S. passport.",
+      ]),
+    });
+    expect(parseOpenAIResponse).toHaveBeenCalledWith(
+      expect.objectContaining({
+        input: expect.stringContaining(
+          "reason about the meaning of every mandatory requirement",
+        ),
+      }),
+    );
+  });
+
+  it("does not override AI when a U.S. passport is merely preferred", async () => {
+    parseOpenAIResponse.mockResolvedValue({
+      output_parsed: {
+        decision: "QUALIFIED",
+        roleMatch: true,
+        usEligible: true,
+        excludedSeniority: false,
+        excludedDomain: false,
+        excludedEmploymentType: false,
+        sponsorshipEligible: true,
+        citizenshipRequired: false,
+        ...noHiringContact,
+        requiredYears: 2,
+        experienceStatus: "WITHIN_LIMIT",
+        reasons: ["The role otherwise satisfies the configured rules."],
+      },
+    });
+    const passportJob = {
+      ...job,
+      description: "A valid U.S. passport is preferred, but not required.",
+    };
+
+    await expect(validateJobWithOpenAI(passportJob, filters)).resolves.toMatchObject({
+      decision: "QUALIFIED",
+      citizenshipRequired: false,
     });
   });
 
