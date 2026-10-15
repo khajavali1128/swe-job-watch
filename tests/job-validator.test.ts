@@ -68,15 +68,45 @@ describe("validateJobWithGemini", () => {
         sponsorshipEligible: true,
         citizenshipRequired: false,
         ...noHiringContact,
-        requiredYears: 5,
+        requiredYears: 6,
         experienceStatus: "OVER_LIMIT",
+        reasons: ["Six years required."],
+      }),
+    });
+
+    const overLimitJob = {
+      ...job,
+      description: "Requires 6 years of professional experience.",
+    };
+
+    await expect(validateJobWithGemini(overLimitJob, filters)).rejects.toThrow(
+      "Gemini returned an inconsistent decision: expected REJECTED",
+    );
+  });
+
+  it("accepts a mandatory five-year minimum at the configured limit", async () => {
+    generateContent.mockResolvedValue({
+      text: JSON.stringify({
+        decision: "QUALIFIED",
+        roleMatch: true,
+        usEligible: true,
+        excludedSeniority: false,
+        excludedDomain: false,
+        excludedEmploymentType: false,
+        sponsorshipEligible: true,
+        citizenshipRequired: false,
+        ...noHiringContact,
+        requiredYears: 5,
+        experienceStatus: "WITHIN_LIMIT",
         reasons: ["Five years required."],
       }),
     });
 
-    await expect(validateJobWithGemini(job, filters)).rejects.toThrow(
-      "Gemini returned an inconsistent decision: expected REJECTED",
-    );
+    await expect(validateJobWithGemini(job, filters)).resolves.toMatchObject({
+      decision: "QUALIFIED",
+      requiredYears: 5,
+      experienceStatus: "WITHIN_LIMIT",
+    });
   });
 
   it("accepts a logically consistent rejected result", async () => {
@@ -91,15 +121,22 @@ describe("validateJobWithGemini", () => {
         sponsorshipEligible: true,
         citizenshipRequired: false,
         ...noHiringContact,
-        requiredYears: 5,
+        requiredYears: 6,
         experienceStatus: "OVER_LIMIT",
-        reasons: ["Five years required."],
+        reasons: ["Six years required."],
       }),
     });
 
-    await expect(validateJobWithGemini(job, filters)).resolves.toMatchObject({
+    const overLimitJob = {
+      ...job,
+      description: "Requires 6 years of professional experience.",
+    };
+
+    await expect(
+      validateJobWithGemini(overLimitJob, filters),
+    ).resolves.toMatchObject({
       decision: "REJECTED",
-      requiredYears: 5,
+      requiredYears: 6,
       experienceStatus: "OVER_LIMIT",
     });
   });
@@ -372,7 +409,7 @@ describe("validateJobWithOpenAI", () => {
       requiredYears: 10,
       experienceStatus: "OVER_LIMIT",
       reasons: expect.arrayContaining([
-        "The role explicitly requires at least 10 years of experience, exceeding the configured maximum of 4 years.",
+        "The role explicitly requires at least 10 years of experience, exceeding the configured maximum of 5 years.",
       ]),
     });
   });
