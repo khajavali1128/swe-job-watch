@@ -1,16 +1,4 @@
-import { AppleAdapter } from "../src/adapters/apple.js";
-import { AshbyAdapter } from "../src/adapters/ashby.js";
-import { AvatureAdapter } from "../src/adapters/avature.js";
-import { ByteDanceAdapter } from "../src/adapters/bytedance.js";
-import { EightfoldAdapter } from "../src/adapters/eightfold.js";
-import { GreenhouseAdapter } from "../src/adapters/greenhouse.js";
-import { IcimsAdapter } from "../src/adapters/icims.js";
-import { LeverAdapter } from "../src/adapters/lever.js";
-import { OracleAdapter } from "../src/adapters/oracle.js";
-import { SmartRecruitersAdapter } from "../src/adapters/smartrecruiters.js";
-import { SuccessFactorsAdapter } from "../src/adapters/successfactors.js";
-import { WorkdayAdapter } from "../src/adapters/workday.js";
-import type { JobAdapter } from "../src/adapters/types.js";
+import { createAdapter } from "../src/adapters/registry.js";
 import { loadConfig, type CompanyConfig } from "../src/config/index.js";
 import type { JobSummary } from "../src/types.js";
 
@@ -88,35 +76,6 @@ function isUsableSummary(
     summary.title.trim().length > 0 &&
     /^https?:\/\//i.test(summary.url)
   );
-}
-
-function createAdapter(company: CompanyConfig): JobAdapter {
-  switch (company.adapter) {
-    case "apple":
-      return new AppleAdapter();
-    case "ashby":
-      return new AshbyAdapter();
-    case "avature":
-      return new AvatureAdapter();
-    case "bytedance":
-      return new ByteDanceAdapter();
-    case "eightfold":
-      return new EightfoldAdapter();
-    case "greenhouse":
-      return new GreenhouseAdapter();
-    case "icims":
-      return new IcimsAdapter();
-    case "lever":
-      return new LeverAdapter();
-    case "oracle":
-      return new OracleAdapter();
-    case "smartrecruiters":
-      return new SmartRecruitersAdapter();
-    case "successfactors":
-      return new SuccessFactorsAdapter();
-    case "workday":
-      return new WorkdayAdapter();
-  }
 }
 
 async function main(): Promise<void> {

@@ -206,6 +206,19 @@ npm run test:workflow -- doordash
 npm run test:workflow -- doordash JOB_ID
 ```
 
+Run one adapter independently without Sheets writes, email, or AI validation:
+
+```bash
+# All enabled companies using one provider
+npm run adapter -- workday
+
+# One configured company using that provider (including a disabled company)
+npm run adapter -- workday adobe
+
+# Run only the colocated provider test suites
+npm run test:adapters
+```
+
 ## GitHub Actions
 
 Six staggered workflows run twice daily using Pacific local time. Scheduled runs may start a few minutes late.
@@ -248,7 +261,9 @@ Each cloud run installs dependencies, type-checks, runs unit tests, builds TypeS
 config/                            Companies and qualification policy
 scripts/test-workflow.ts           Focused live end-to-end harness
 scripts/test-company-apis.ts       Public ATS listing API audit
-src/adapters/                      ATS integrations and shared contract
+src/adapters/<provider>/           Provider integration and colocated tests
+src/adapters/registry.ts           Adapter factory registry
+src/adapters/run.ts                Independent adapter CLI
 src/ai/job-validator.ts            OpenAI primary and Gemini fallback
 src/config/                        YAML loading and Zod validation
 src/email/run-summary.ts           Gmail run summary

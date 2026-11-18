@@ -1,10 +1,10 @@
 import type {
   CompanyConfig,
   IcimsCompanyConfig,
-} from "../config/index.js";
-import type { JobDetails, JobSummary } from "../types.js";
-import { AdapterHttpError } from "./errors.js";
-import type { JobAdapter, JobSummaryQuery } from "./types.js";
+} from "../../config/index.js";
+import type { JobDetails, JobSummary } from "../../types.js";
+import { AdapterHttpError } from "../errors.js";
+import type { JobAdapter, JobSummaryQuery } from "../types.js";
 
 interface IcimsJobData {
   slug?: string | null;

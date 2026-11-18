@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { AvatureAdapter } from "../src/adapters/avature.js";
-import type { CompanyConfig } from "../src/config/index.js";
+import { AvatureAdapter } from "./adapter.js";
+import type { CompanyConfig } from "../../config/index.js";
 
 const company: CompanyConfig = {
   id: "synopsys",

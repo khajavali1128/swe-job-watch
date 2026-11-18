@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { ByteDanceAdapter } from "../src/adapters/bytedance.js";
-import type { ByteDanceCompanyConfig } from "../src/config/index.js";
+import { ByteDanceAdapter } from "./adapter.js";
+import type { ByteDanceCompanyConfig } from "../../config/index.js";
 
 const company: ByteDanceCompanyConfig = {
   id: "tiktok",

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { EightfoldAdapter } from "../src/adapters/eightfold.js";
-import type { EightfoldCompanyConfig } from "../src/config/index.js";
+import { EightfoldAdapter } from "./adapter.js";
+import type { EightfoldCompanyConfig } from "../../config/index.js";
 
 const company: EightfoldCompanyConfig = {
   id: "netflix",

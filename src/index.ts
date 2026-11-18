@@ -1,19 +1,7 @@
-import { AppleAdapter } from "./adapters/apple.js";
-import { GreenhouseAdapter } from "./adapters/greenhouse.js";
-import { IcimsAdapter } from "./adapters/icims.js";
-import { AshbyAdapter } from "./adapters/ashby.js";
-import { AvatureAdapter } from "./adapters/avature.js";
-import { ByteDanceAdapter } from "./adapters/bytedance.js";
-import { EightfoldAdapter } from "./adapters/eightfold.js";
-import { LeverAdapter } from "./adapters/lever.js";
-import { OracleAdapter } from "./adapters/oracle.js";
-import { SmartRecruitersAdapter } from "./adapters/smartrecruiters.js";
-import { SuccessFactorsAdapter } from "./adapters/successfactors.js";
-import { WorkdayAdapter } from "./adapters/workday.js";
 import { isUnavailableSourceError } from "./adapters/errors.js";
-import type { JobAdapter } from "./adapters/types.js";
+import { createAdapter } from "./adapters/registry.js";
 import { validateJob } from "./ai/job-validator.js";
-import { loadConfig, type CompanyConfig } from "./config/index.js";
+import { loadConfig } from "./config/index.js";
 import { filterJobSummaries } from "./filters/job-summary-filter.js";
 import { sendRunSummaryEmail } from "./email/run-summary.js";
 import { selectEnabledCompanies } from "./run-scope.js";
@@ -206,35 +194,6 @@ async function main(): Promise<void> {
 
   if (totals.failed > 0) {
     process.exitCode = 1;
-  }
-}
-
-function createAdapter(company: CompanyConfig): JobAdapter {
-  switch (company.adapter) {
-    case "apple":
-      return new AppleAdapter();
-    case "ashby":
-      return new AshbyAdapter();
-    case "avature":
-      return new AvatureAdapter();
-    case "bytedance":
-      return new ByteDanceAdapter();
-    case "eightfold":
-      return new EightfoldAdapter();
-    case "greenhouse":
-      return new GreenhouseAdapter();
-    case "icims":
-      return new IcimsAdapter();
-    case "lever":
-      return new LeverAdapter();
-    case "oracle":
-      return new OracleAdapter();
-    case "smartrecruiters":
-      return new SmartRecruitersAdapter();
-    case "successfactors":
-      return new SuccessFactorsAdapter();
-    case "workday":
-      return new WorkdayAdapter();
   }
 }
 

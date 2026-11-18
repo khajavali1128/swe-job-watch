@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { SuccessFactorsAdapter } from "../src/adapters/successfactors.js";
-import type { SuccessFactorsCompanyConfig } from "../src/config/index.js";
-import { CompanySchema } from "../src/config/schema.js";
+import { SuccessFactorsAdapter } from "./adapter.js";
+import type { SuccessFactorsCompanyConfig } from "../../config/index.js";
+import { CompanySchema } from "../../config/schema.js";
 
 const company: SuccessFactorsCompanyConfig = {
   id: "example",

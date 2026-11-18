@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { IcimsAdapter } from "../src/adapters/icims.js";
-import type { CompanyConfig } from "../src/config/index.js";
-import { CompanySchema } from "../src/config/schema.js";
+import { IcimsAdapter } from "./adapter.js";
+import type { CompanyConfig } from "../../config/index.js";
+import { CompanySchema } from "../../config/schema.js";
 
 afterEach(() => {
   vi.unstubAllGlobals();

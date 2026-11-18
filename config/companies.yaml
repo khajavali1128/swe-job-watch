@@ -1158,3 +1158,12 @@ companies:
   enabled: true
   adapter: greenhouse
   handle: futuresecureai
+- id: upstart
+  name: Upstart
+  enabled: true
+  adapter: greenhouse
+  handle: upstart
+- id: cisco
+  name: Cisco
+  enabled: true
+  adapter: cisco

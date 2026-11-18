@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { AppleAdapter } from "../src/adapters/apple.js";
-import type { AppleCompanyConfig } from "../src/config/index.js";
+import { AppleAdapter } from "./adapter.js";
+import type { AppleCompanyConfig } from "../../config/index.js";
 
 const company: AppleCompanyConfig = {
   id: "apple",

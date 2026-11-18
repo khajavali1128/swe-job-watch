@@ -4,6 +4,7 @@ export type {
   AppleCompanyConfig,
   AvatureCompanyConfig,
   ByteDanceCompanyConfig,
+  CiscoCompanyConfig,
   CompaniesConfig,
   CompanyConfig,
   EightfoldCompanyConfig,

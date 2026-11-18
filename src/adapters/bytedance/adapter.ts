@@ -1,10 +1,10 @@
 import type {
   ByteDanceCompanyConfig,
   CompanyConfig,
-} from "../config/index.js";
-import type { JobDetails, JobSummary } from "../types.js";
-import { AdapterHttpError } from "./errors.js";
-import type { JobAdapter } from "./types.js";
+} from "../../config/index.js";
+import type { JobDetails, JobSummary } from "../../types.js";
+import { AdapterHttpError } from "../errors.js";
+import type { JobAdapter } from "../types.js";
 
 interface ByteDanceLocation {
   code?: string | null;
