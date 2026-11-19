@@ -135,7 +135,13 @@ function matchesFreshness(
   const cutoff =
     now.getTime() - filters.freshness.lookbackHours * 60 * 60 * 1000;
 
-  return postedAt >= cutoff && postedAt <= now.getTime();
+  // These sites publish only a calendar date. Keep the cutoff day eligible
+  // because the actual posting time within that day is unknown.
+  const latestPossiblePosting = job.source === "intuit" || job.source === "netapp"
+    ? postedAt + 24 * 60 * 60 * 1000 - 1
+    : postedAt;
+
+  return latestPossiblePosting >= cutoff && postedAt <= now.getTime();
 }
 
 function matchesLocation(

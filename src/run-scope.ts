@@ -10,6 +10,8 @@ const SUPPORTED_ADAPTERS = new Set<CompanyConfig["adapter"]>([
   "eightfold",
   "greenhouse",
   "icims",
+  "intuit",
+  "netapp",
   "lever",
   "oracle",
   "smartrecruiters",

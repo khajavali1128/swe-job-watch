@@ -11,6 +11,8 @@ export type {
   EightfoldCompanyConfig,
   FiltersConfig,
   IcimsCompanyConfig,
+  IntuitCompanyConfig,
+  NetAppCompanyConfig,
   OracleCompanyConfig,
   SuccessFactorsCompanyConfig,
   WorkdayCompanyConfig,

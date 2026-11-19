@@ -42,6 +42,12 @@ export const CiscoCompanySchema = z
 export const AtlassianCompanySchema = z
   .object({ ...companyBase, adapter: z.literal("atlassian") })
   .strict();
+export const IntuitCompanySchema = z
+  .object({ ...companyBase, adapter: z.literal("intuit") })
+  .strict();
+export const NetAppCompanySchema = z
+  .object({ ...companyBase, adapter: z.literal("netapp") })
+  .strict();
 
 export const IcimsCompanySchema = z
   .object({
@@ -125,6 +131,8 @@ export const CompanySchema = z.discriminatedUnion("adapter", [
   CiscoCompanySchema,
   GreenhouseCompanySchema,
   IcimsCompanySchema,
+  IntuitCompanySchema,
+  NetAppCompanySchema,
   LeverCompanySchema,
   SmartRecruitersCompanySchema,
   AshbyCompanySchema,
@@ -224,6 +232,8 @@ export type CiscoCompanyConfig = z.infer<typeof CiscoCompanySchema>;
 export type AvatureCompanyConfig = z.infer<typeof AvatureCompanySchema>;
 export type EightfoldCompanyConfig = z.infer<typeof EightfoldCompanySchema>;
 export type IcimsCompanyConfig = z.infer<typeof IcimsCompanySchema>;
+export type IntuitCompanyConfig = z.infer<typeof IntuitCompanySchema>;
+export type NetAppCompanyConfig = z.infer<typeof NetAppCompanySchema>;
 export type OracleCompanyConfig = z.infer<typeof OracleCompanySchema>;
 export type SuccessFactorsCompanyConfig = z.infer<
   typeof SuccessFactorsCompanySchema

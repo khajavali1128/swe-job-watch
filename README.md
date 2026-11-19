@@ -2,7 +2,7 @@
 
 SWE Job Watch is a scheduled Node.js and TypeScript service that scans public ATS job boards, filters recently opened U.S. software-engineering roles, validates full job descriptions with AI, and appends qualified jobs to Google Sheets.
 
-The production service currently checks 194 enabled companies across Apple Careers, Ashby, Avature, ByteDance's public supplier API, Eightfold, Greenhouse, iCIMS Jibe, Lever, SmartRecruiters, SuccessFactors, Oracle Recruiting, and Workday.
+The production service currently checks 200 enabled companies across Apple Careers, Ashby, Atlassian, Avature, ByteDance's public supplier API, Cisco, Eightfold, Greenhouse, iCIMS Jibe, Intuit, Lever, NetApp, SmartRecruiters, SuccessFactors, Oracle Recruiting, and Workday.
 
 ## Workflow
 
@@ -64,6 +64,7 @@ Provider failures are isolated by company, and AI failures are isolated by job. 
 | Oracle Recruiting | Listing `PostedDate`, confirmed by `ExternalPostedStartDate` | Individual requisition endpoint | Enabled |
 | Workday | Relative `postedOn` label | Individual posting endpoint | Enabled |
 | Lever | `createdAt` posting-record timestamp | Individual posting endpoint | Enabled |
+| Intuit and NetApp | Date-only `datePosted` from detail JSON-LD | Public job-detail page after cheap filtering | Enabled in a separate Custom Careers workflow |
 
 Every adapter produces the shared `JobSummary` and `JobDetails` types. Apple creates a short-lived CSRF session, requests U.S. postings newest-first, stops after crossing the freshness cutoff, and deduplicates the same position across locations before filtering. The reusable ByteDance adapter paginates the public supplier APIs used by TikTok and ByteDance and caches the descriptions and requirements included in each listing response. Because those APIs provide no publication timestamp, their jobs use first-seen processing and leave the sheet's Posted Date blank. Eightfold uses a configurable public career-site host and domain, making the adapter reusable beyond Netflix after each company is verified; date-only posting timestamps remain eligible through the following day so the rolling window does not miss late postings. Ashby descriptions are cached from the board response to avoid per-job requests. Avature reads public server-rendered career pages, sorts dated listings newest-first, and stops pagination after crossing the freshness cutoff; for Siemens, it hydrates missing listing dates from detail pages in parallel and caches those responses. The reusable iCIMS Jibe adapter reads dated listings and caches descriptions included in the feed. Lever paginates the public postings API and uses its millisecond `createdAt` value as the freshness timestamp; listings with missing or implausible timestamps are skipped. SmartRecruiters pagination is handled automatically, and its applicant-facing URL is obtained from the detail response before a job reaches the sheet. SuccessFactors supports both server-rendered pages and official RSS feeds; the HCLTech and Wipro feeds are scoped to U.S. software results before the normal filters run. Oracle requests only a buffered recent listing window, uses listing dates for cheap filtering, and confirms exact timestamps when fetching a surviving job's details. Workday exposes relative posting labels rather than exact timestamps, so the adapter interprets them conservatively to avoid missing recent jobs.
 
@@ -221,7 +222,7 @@ npm run test:adapters
 
 ## GitHub Actions
 
-Six staggered workflows run twice daily using Pacific local time. Scheduled runs may start a few minutes late.
+Seven staggered workflows run twice daily using Pacific local time. Scheduled runs may start a few minutes late.
 
 | Workflow | Adapters | Schedule |
 | --- | --- | --- |
@@ -230,9 +231,10 @@ Six staggered workflows run twice daily using Pacific local time. Scheduled runs
 | [`job-watch-workday.yml`](.github/workflows/job-watch-workday.yml) | Workday | 12:30 PM and 6:30 PM Pacific |
 | [`job-watch-avature.yml`](.github/workflows/job-watch-avature.yml) | Avature | 12:45 PM and 6:45 PM Pacific |
 | [`job-watch-eightfold.yml`](.github/workflows/job-watch-eightfold.yml) | Eightfold | 1:00 PM and 7:00 PM Pacific |
-| [`job-watch-custom.yml`](.github/workflows/job-watch-custom.yml) | Apple, TikTok, and ByteDance | 1:15 PM and 7:15 PM Pacific |
+| [`job-watch-custom.yml`](.github/workflows/job-watch-custom.yml) | Apple, Atlassian, TikTok, ByteDance, Cisco | 1:15 PM and 7:15 PM Pacific |
+| [`job-watch-talentbrew.yml`](.github/workflows/job-watch-talentbrew.yml) | Intuit, NetApp | 1:30 PM and 7:30 PM Pacific |
 
-All six workflows share a concurrency group so only one can access the Google Sheet at a time. Each workflow can also be run manually from its own Actions page, or with:
+All seven workflows share a concurrency group so only one can access the Google Sheet at a time. Spotify remains in the Fast Adapters workflow through Lever. Each workflow can also be run manually from its own Actions page, or with:
 
 ```bash
 gh workflow run job-watch.yml
@@ -241,6 +243,7 @@ gh workflow run job-watch-workday.yml
 gh workflow run job-watch-avature.yml
 gh workflow run job-watch-eightfold.yml
 gh workflow run job-watch-custom.yml
+gh workflow run job-watch-talentbrew.yml
 gh run watch
 ```
 

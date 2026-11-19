@@ -1171,3 +1171,11 @@ companies:
   name: Atlassian
   enabled: true
   adapter: atlassian
+- id: intuit
+  name: Intuit
+  enabled: true
+  adapter: intuit
+- id: netapp
+  name: NetApp
+  enabled: true
+  adapter: netapp

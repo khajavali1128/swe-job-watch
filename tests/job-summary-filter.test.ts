@@ -122,6 +122,17 @@ describe("filterJobSummaries", () => {
     expect(filterJobSummaries([job], filters, NOW)).toHaveLength(0);
   });
 
+  it("keeps Intuit's date-only posting on the cutoff day", () => {
+    const job = makeJob({
+      source: "intuit",
+      postedAt: new Date("2026-09-12T00:00:00.000Z"),
+    });
+
+    expect(filterJobSummaries([job], filters, NOW)).toHaveLength(1);
+    expect(filterJobSummaries([makeJob({ ...job, source: "greenhouse" })], filters, NOW)).toHaveLength(0);
+    expect(filterJobSummaries([makeJob({ ...job, source: "netapp" })], filters, NOW)).toHaveLength(1);
+  });
+
   it("rejects an explicitly non-U.S. listing", () => {
     const job = makeJob({
       title: "Full Stack Software Engineer, Brazil",

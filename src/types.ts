@@ -7,6 +7,8 @@ export type JobSource =
   | "eightfold"
   | "greenhouse"
   | "icims"
+  | "intuit"
+  | "netapp"
   | "lever"
   | "smartrecruiters"
   | "ashby"

@@ -7,6 +7,8 @@ import { CiscoAdapter } from "./cisco/adapter.js";
 import { EightfoldAdapter } from "./eightfold/adapter.js";
 import { GreenhouseAdapter } from "./greenhouse/adapter.js";
 import { IcimsAdapter } from "./icims/adapter.js";
+import { IntuitAdapter } from "./intuit/adapter.js";
+import { NetAppAdapter } from "./netapp/adapter.js";
 import { LeverAdapter } from "./lever/adapter.js";
 import { OracleAdapter } from "./oracle/adapter.js";
 import { SmartRecruitersAdapter } from "./smartrecruiters/adapter.js";
@@ -28,6 +30,8 @@ const adapterFactories: Record<AdapterName, AdapterFactory> = {
   eightfold: () => new EightfoldAdapter(),
   greenhouse: () => new GreenhouseAdapter(),
   icims: () => new IcimsAdapter(),
+  intuit: () => new IntuitAdapter(),
+  netapp: () => new NetAppAdapter(),
   lever: () => new LeverAdapter(),
   oracle: () => new OracleAdapter(),
   smartrecruiters: () => new SmartRecruitersAdapter(),
