@@ -1,8 +1,8 @@
 # SWE Job Watch - job qualification rules
 
 freshness:
-  # Seven-day lookback.
-  lookbackHours: 168
+  # Fourteen-day lookback.
+  lookbackHours: 336
   requireOpenJob: true
   allowFirstSeenFallback: true
   useUpdatedAtAsPostedAt: false
