@@ -1,4 +1,5 @@
 export type JobSource =
+  | "atlassian"
   | "apple"
   | "avature"
   | "bytedance"

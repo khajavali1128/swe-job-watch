@@ -1,4 +1,5 @@
 import { AppleAdapter } from "./apple/adapter.js";
+import { AtlassianAdapter } from "./atlassian/adapter.js";
 import { AshbyAdapter } from "./ashby/adapter.js";
 import { AvatureAdapter } from "./avature/adapter.js";
 import { ByteDanceAdapter } from "./bytedance/adapter.js";
@@ -19,6 +20,7 @@ type AdapterFactory = () => JobAdapter;
 
 const adapterFactories: Record<AdapterName, AdapterFactory> = {
   apple: () => new AppleAdapter(),
+  atlassian: () => new AtlassianAdapter(),
   ashby: () => new AshbyAdapter(),
   avature: () => new AvatureAdapter(),
   bytedance: () => new ByteDanceAdapter(),

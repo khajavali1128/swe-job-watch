@@ -1167,3 +1167,7 @@ companies:
   name: Cisco
   enabled: true
   adapter: cisco
+- id: atlassian
+  name: Atlassian
+  enabled: true
+  adapter: atlassian

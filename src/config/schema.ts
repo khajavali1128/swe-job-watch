@@ -39,6 +39,9 @@ export const CiscoCompanySchema = z
     adapter: z.literal("cisco"),
   })
   .strict();
+export const AtlassianCompanySchema = z
+  .object({ ...companyBase, adapter: z.literal("atlassian") })
+  .strict();
 
 export const IcimsCompanySchema = z
   .object({
@@ -114,6 +117,7 @@ export const WorkdayCompanySchema = z
   .strict();
 
 export const CompanySchema = z.discriminatedUnion("adapter", [
+  AtlassianCompanySchema,
   AppleCompanySchema,
   AvatureCompanySchema,
   EightfoldCompanySchema,
@@ -213,6 +217,7 @@ export const AppConfigSchema = z
   .strict();
 
 export type CompanyConfig = z.infer<typeof CompanySchema>;
+export type AtlassianCompanyConfig = z.infer<typeof AtlassianCompanySchema>;
 export type AppleCompanyConfig = z.infer<typeof AppleCompanySchema>;
 export type ByteDanceCompanyConfig = z.infer<typeof ByteDanceCompanySchema>;
 export type CiscoCompanyConfig = z.infer<typeof CiscoCompanySchema>;

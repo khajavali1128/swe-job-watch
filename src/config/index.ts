@@ -1,5 +1,6 @@
 export { loadConfig } from "./loader.js";
 export type {
+  AtlassianCompanyConfig,
   AppConfig,
   AppleCompanyConfig,
   AvatureCompanyConfig,
